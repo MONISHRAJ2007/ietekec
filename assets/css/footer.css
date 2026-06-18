@@ -1,0 +1,196 @@
+/* ============================================================
+   IETE Student Forum – KEC | Footer Styles
+   ============================================================ */
+
+.footer {
+  background: linear-gradient(180deg, var(--color-primary-dark) 0%, #060e1c 100%);
+  color: rgba(255,255,255,0.85);
+  padding-top: var(--space-20);
+}
+
+/* ── Top Area ── */
+.footer__top {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-10);
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ── Brand Column ── */
+.footer__brand { display: flex; flex-direction: column; }
+
+.footer__logos {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.footer__logo {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.footer__logo--kec {
+  filter: none;
+  opacity: 0.95;
+}
+
+.footer__logo-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+}
+
+.footer__tagline {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: #fff;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-heading);
+}
+
+.footer__desc {
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.6);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-5);
+  max-width: 300px;
+}
+
+/* ── Social Links ── */
+.footer__socials {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.footer__social-link {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.7);
+  font-size: var(--text-base);
+  transition: all var(--transition-base);
+  border: 1px solid rgba(255,255,255,0.1);
+  text-decoration: none;
+}
+.footer__social-link:hover {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  border-color: var(--color-secondary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-secondary);
+}
+
+/* ── Link Columns ── */
+.footer__col-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: #fff;
+  margin-bottom: var(--space-5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  position: relative;
+  padding-bottom: var(--space-3);
+}
+
+.footer__col-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background: var(--color-secondary);
+  border-radius: var(--radius-full);
+}
+
+.footer__links { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.footer__link {
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.footer__link::before {
+  content: '›';
+  color: var(--color-secondary);
+  font-size: 1.1rem;
+  transition: transform var(--transition-base);
+}
+
+.footer__link:hover {
+  color: var(--color-secondary);
+  transform: translateX(3px);
+}
+
+/* ── Contact Info ── */
+.footer__contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.6);
+  margin-bottom: var(--space-4);
+}
+
+.footer__contact-icon {
+  color: var(--color-secondary);
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Bottom Bar ── */
+.footer__bottom {
+  padding: var(--space-5) 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.footer__copyright {
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.45);
+}
+
+.footer__bottom-links {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.footer__bottom-link {
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.45);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+.footer__bottom-link:hover { color: var(--color-secondary); }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .footer__top { grid-template-columns: 1fr 1fr; gap: var(--space-8); }
+  .footer__brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .footer__top { grid-template-columns: 1fr 1fr; }
+  .footer__brand { grid-column: 1 / -1; }
+  .footer__bottom { flex-direction: column; text-align: center; }
+}
+
+@media (max-width: 420px) {
+  .footer__top { grid-template-columns: 1fr; }
+}

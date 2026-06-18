@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IETE Student Forum KEC — Celebrating student and faculty achievements in hackathons, competitions, publications, conferences and projects." />
+  <title>Achievements | IETE Student Forum – KEC</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/footer.css" />
+
+  <style>
+    /* ── Achievements Page Specific ── */
+    .achievements-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+    @media (max-width: 1024px) { .achievements-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .achievements-grid { grid-template-columns: 1fr; } }
+
+    /* Enhanced achievement card */
+    .achievement-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .achievement-card__image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .achievement-card__header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .achievement-card__meta-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      flex-wrap: wrap;
+      margin-top: var(--space-2);
+    }
+
+    .achievement-card__author {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--color-primary);
+    }
+
+    .achievement-card__date {
+      font-size: var(--text-xs);
+      color: var(--color-text-light);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Filter tabs bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-bottom: var(--space-8);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-16) var(--space-4);
+      color: var(--color-text-muted);
+    }
+    .empty-state__icon { font-size: 3.5rem; margin-bottom: var(--space-4); }
+    .empty-state__title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-2);
+    }
+    .empty-state__desc { font-size: var(--text-sm); }
+
+    /* Faculty section */
+    .section-divider {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-primary-100), var(--color-secondary-100));
+    }
+
+    /* Category color dots on card icon */
+    .achievement-card__icon--hackathon  { background: rgba(239,68,68,0.12);  }
+    .achievement-card__icon--competition{ background: rgba(244,163,0,0.15);  }
+    .achievement-card__icon--publication{ background: rgba(59,130,246,0.12); }
+    .achievement-card__icon--conference { background: rgba(34,197,94,0.12);  }
+    .achievement-card__icon--project    { background: rgba(168,85,247,0.12); }
+
+    /* Stats bar at top */
+    .achievements-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-12);
+    }
+    @media (max-width: 1024px) { .achievements-stats { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 640px)  { .achievements-stats { grid-template-columns: repeat(2, 1fr); } }
+
+    .stat-mini {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      padding: var(--space-5) var(--space-4);
+      text-align: center;
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+    .stat-mini:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .stat-mini__icon { font-size: 1.75rem; margin-bottom: var(--space-2); display: block; }
+    .stat-mini__count {
+      font-family: var(--font-heading);
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      color: var(--color-primary);
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+    .stat-mini__label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div id="navbar-placeholder"></div>
+
+  <main>
+    <!-- Page Hero -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Achievements</span>
+        </nav>
+        <h1>Achievements</h1>
+        <p>Recognising excellence — our students and faculty making their mark at national and international levels.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────────── STUDENT ACHIEVEMENTS ─────────────────── -->
+    <section class="section" id="student-achievements">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">Student Excellence</span>
+          <h2 class="section-title">Student Achievements</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">From hackathons to publications — our students lead and inspire.</p>
+        </div>
+
+        <!-- Stats Bar (populated dynamically) -->
+        <div id="student-stats" class="achievements-stats reveal"></div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-bar reveal" id="student-filter-tabs" role="tablist" aria-label="Filter student achievements">
+          <button class="filter-tab active" data-category="All" role="tab" aria-selected="true">🏅 All</button>
+          <button class="filter-tab" data-category="Hackathons" role="tab" aria-selected="false">🏆 Hackathons</button>
+          <button class="filter-tab" data-category="Competitions" role="tab" aria-selected="false">🥇 Competitions</button>
+          <button class="filter-tab" data-category="Publications" role="tab" aria-selected="false">📄 Publications</button>
+          <button class="filter-tab" data-category="Conferences" role="tab" aria-selected="false">🎤 Conferences</button>
+          <button class="filter-tab" data-category="Projects" role="tab" aria-selected="false">🚀 Projects</button>
+        </div>
+
+        <!-- Grid -->
+        <div id="student-grid" class="achievements-grid"></div>
+        <div id="student-empty" class="empty-state" style="display:none;" aria-live="polite">
+          <div class="empty-state__icon">🏅</div>
+          <h3 class="empty-state__title">No Achievements Yet</h3>
+          <p class="empty-state__desc">Student achievements will appear here once added.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ─────────────────── FACULTY ACHIEVEMENTS ─────────────────── -->
+    <section class="section section--alt" id="faculty-achievements">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">Faculty Excellence</span>
+          <h2 class="section-title">Faculty Achievements</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">Our faculty mentors setting benchmarks in research and industry collaboration.</p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-bar reveal" id="faculty-filter-tabs" role="tablist" aria-label="Filter faculty achievements">
+          <button class="filter-tab active" data-category="All" role="tab" aria-selected="true">🏅 All</button>
+          <button class="filter-tab" data-category="Hackathons" role="tab" aria-selected="false">🏆 Hackathons</button>
+          <button class="filter-tab" data-category="Competitions" role="tab" aria-selected="false">🥇 Competitions</button>
+          <button class="filter-tab" data-category="Publications" role="tab" aria-selected="false">📄 Publications</button>
+          <button class="filter-tab" data-category="Conferences" role="tab" aria-selected="false">🎤 Conferences</button>
+          <button class="filter-tab" data-category="Projects" role="tab" aria-selected="false">🚀 Projects</button>
+        </div>
+
+        <!-- Grid -->
+        <div id="faculty-grid" class="achievements-grid"></div>
+        <div id="faculty-empty" class="empty-state" style="display:none;" aria-live="polite">
+          <div class="empty-state__icon">👨‍🏫</div>
+          <h3 class="empty-state__title">No Achievements Yet</h3>
+          <p class="empty-state__desc">Faculty achievements will appear here once added.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Page Script -->
+  <script type="module">
+    import { renderNavbar, renderFooter } from './assets/js/navbar.js';
+    import { initScrollReveal, initLazyLoad } from './assets/js/animations.js';
+    import supabase from './assets/js/supabase-client.js';
+
+    renderNavbar('./');
+    renderFooter('./');
+    initScrollReveal();
+
+    // ── Data storage: fetched once, filtered client-side ──────
+    let allAchievements = [];
+
+    // ── Category → icon mapping ───────────────────────────────
+    const categoryIcons = {
+      'Hackathons':   '🏆',
+      'Competitions': '🥇',
+      'Publications': '📄',
+      'Conferences':  '🎤',
+      'Projects':     '🚀',
+    };
+    const categoryClass = {
+      'Hackathons':   'hackathon',
+      'Competitions': 'competition',
+      'Publications': 'publication',
+      'Conferences':  'conference',
+      'Projects':     'project',
+    };
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function buildAchievementCard(ac) {
+      const icon  = categoryIcons[ac.category] || '🏅';
+      const cls   = categoryClass[ac.category] || '';
+
+      const imagePart = ac.image_url
+        ? `<img class="achievement-card__image" src="${ac.image_url}" alt="${ac.title}" loading="lazy" />`
+        : '';
+
+      return `
+        <article class="achievement-card reveal">
+          ${imagePart}
+          <div class="achievement-card__header">
+            <div class="achievement-card__icon achievement-card__icon--${cls}" style="width:48px;height:48px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">
+              ${icon}
+            </div>
+            <div>
+              <div class="achievement-card__category">${ac.category || 'Achievement'}</div>
+              <h3 class="achievement-card__title">${ac.title || 'Untitled'}</h3>
+            </div>
+          </div>
+          <div class="achievement-card__meta-row">
+            ${ac.author_name ? `<span class="achievement-card__author">👤 ${ac.author_name}</span>` : ''}
+            ${ac.date ? `<span class="achievement-card__date">📅 ${formatDate(ac.date)}</span>` : ''}
+          </div>
+          <p class="achievement-card__desc">${ac.description || ''}</p>
+        </article>`;
+    }
+
+    // ── Render filtered grid ──────────────────────────────────
+    function renderGrid(type, category) {
+      const gridId  = type === 'student' ? 'student-grid'  : 'faculty-grid';
+      const emptyId = type === 'student' ? 'student-empty' : 'faculty-empty';
+
+      const filtered = allAchievements.filter(ac => {
+        if (ac.type !== type) return false;
+        if (category === 'All') return true;
+        return ac.category === category;
+      });
+
+      const grid  = document.getElementById(gridId);
+      const empty = document.getElementById(emptyId);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        grid.style.display  = 'none';
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        grid.style.display  = 'grid';
+        grid.innerHTML = filtered.map(buildAchievementCard).join('');
+        initScrollReveal();
+        initLazyLoad();
+      }
+    }
+
+    // ── Build stats bar for students ──────────────────────────
+    function renderStudentStats() {
+      const students = allAchievements.filter(a => a.type === 'student');
+      const container = document.getElementById('student-stats');
+
+      const categories = ['Hackathons', 'Competitions', 'Publications', 'Conferences', 'Projects'];
+      const statsHTML = categories.map(cat => {
+        const count = students.filter(a => a.category === cat).length;
+        const icon  = categoryIcons[cat] || '🏅';
+        return `
+          <div class="stat-mini reveal">
+            <span class="stat-mini__icon">${icon}</span>
+            <div class="stat-mini__count">${count}</div>
+            <div class="stat-mini__label">${cat}</div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = statsHTML;
+    }
+
+    // ── Wire up filter tabs ───────────────────────────────────
+    function wireFilterTabs(tabsId, type) {
+      document.getElementById(tabsId).addEventListener('click', (e) => {
+        const tab = e.target.closest('.filter-tab');
+        if (!tab) return;
+        document.querySelectorAll(`#${tabsId} .filter-tab`).forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        renderGrid(type, tab.dataset.category);
+      });
+    }
+
+    wireFilterTabs('student-filter-tabs', 'student');
+    wireFilterTabs('faculty-filter-tabs', 'faculty');
+
+    // ── Fetch all achievements once ───────────────────────────
+    async function loadAchievements() {
+      const { data, error } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Achievements fetch error:', error);
+        document.getElementById('student-empty').style.display = 'block';
+        document.getElementById('faculty-empty').style.display = 'block';
+        return;
+      }
+
+      allAchievements = data || [];
+
+      renderStudentStats();
+      renderGrid('student', 'All');
+      renderGrid('faculty', 'All');
+      initScrollReveal();
+    }
+
+    loadAchievements();
+  </script>
+</body>
+</html>

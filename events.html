@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IETE Student Forum KEC — Upcoming and past events including workshops, seminars, technical talks, competitions and industrial visits." />
+  <title>Events | IETE Student Forum – KEC</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/footer.css" />
+
+  <style>
+    /* ── Events Page Specific ── */
+    .events-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .events-search {
+      flex: 1;
+      min-width: 220px;
+      max-width: 360px;
+    }
+
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+
+    @media (max-width: 1024px) { .events-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .events-grid { grid-template-columns: 1fr; } }
+
+    /* Loading Spinner */
+    .spinner-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: var(--space-16) 0;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-20) var(--space-4);
+      color: var(--color-text-muted);
+    }
+    .empty-state__icon { font-size: 3.5rem; margin-bottom: var(--space-4); }
+    .empty-state__title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-2);
+    }
+    .empty-state__desc { font-size: var(--text-sm); }
+
+    /* Event card poster placeholder icon area */
+    .event-card__poster-placeholder { font-size: 3.5rem; }
+
+    /* Past events 3-col grid */
+    .past-events-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+    @media (max-width: 1024px) { .past-events-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .past-events-grid { grid-template-columns: 1fr; } }
+
+    /* Section separator */
+    .section-divider {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-primary-100), var(--color-secondary-100));
+      margin: 0;
+    }
+  </style>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div id="navbar-placeholder"></div>
+
+  <main>
+    <!-- Page Hero -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Events</span>
+        </nav>
+        <h1>Events</h1>
+        <p>Explore our workshops, seminars, technical talks, competitions and industrial visits — fuelling innovation and learning.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────────── UPCOMING EVENTS ─────────────────── -->
+    <section class="section" id="upcoming-events">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">What's Coming</span>
+          <h2 class="section-title">Upcoming Events</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">Don't miss out — register early and be part of the action.</p>
+        </div>
+
+        <!-- Controls: Filter Tabs + Search -->
+        <div class="events-controls reveal">
+          <!-- Filter Tabs -->
+          <div class="filter-tabs" id="upcoming-filter-tabs" role="tablist" aria-label="Filter upcoming events">
+            <button class="filter-tab active" data-filter="All" role="tab" aria-selected="true">All</button>
+            <button class="filter-tab" data-filter="Workshop" role="tab" aria-selected="false">Workshop</button>
+            <button class="filter-tab" data-filter="Seminar" role="tab" aria-selected="false">Seminar</button>
+            <button class="filter-tab" data-filter="Technical Talk" role="tab" aria-selected="false">Technical Talk</button>
+            <button class="filter-tab" data-filter="Competition" role="tab" aria-selected="false">Competition</button>
+            <button class="filter-tab" data-filter="Industrial Visit" role="tab" aria-selected="false">Industrial Visit</button>
+          </div>
+
+          <!-- Search -->
+          <div class="search-bar events-search">
+            <span class="search-bar__icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              id="upcoming-search"
+              placeholder="Search events…"
+              aria-label="Search upcoming events"
+            />
+          </div>
+        </div>
+
+        <!-- Grid -->
+        <div id="upcoming-spinner" class="spinner-wrap" aria-live="polite" aria-label="Loading events">
+          <div class="spinner"></div>
+        </div>
+        <div id="upcoming-grid" class="events-grid" style="display:none;"></div>
+        <div id="upcoming-empty" class="empty-state" style="display:none;" aria-live="polite">
+          <div class="empty-state__icon">📅</div>
+          <h3 class="empty-state__title">No Events Found</h3>
+          <p class="empty-state__desc">No upcoming events match your search or filter. Check back soon!</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ─────────────────── PAST EVENTS ─────────────────── -->
+    <section class="section section--alt" id="past-events">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">Look Back</span>
+          <h2 class="section-title">Past Events</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">Relive the highlights and download event reports from our previous activities.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="events-controls reveal">
+          <div class="filter-tabs" id="past-filter-tabs" role="tablist" aria-label="Filter past events">
+            <button class="filter-tab active" data-filter="All" role="tab" aria-selected="true">All</button>
+            <button class="filter-tab" data-filter="Workshop" role="tab" aria-selected="false">Workshop</button>
+            <button class="filter-tab" data-filter="Seminar" role="tab" aria-selected="false">Seminar</button>
+            <button class="filter-tab" data-filter="Technical Talk" role="tab" aria-selected="false">Technical Talk</button>
+            <button class="filter-tab" data-filter="Competition" role="tab" aria-selected="false">Competition</button>
+            <button class="filter-tab" data-filter="Industrial Visit" role="tab" aria-selected="false">Industrial Visit</button>
+          </div>
+          <div class="search-bar events-search">
+            <span class="search-bar__icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              id="past-search"
+              placeholder="Search past events…"
+              aria-label="Search past events"
+            />
+          </div>
+        </div>
+
+        <!-- Grid -->
+        <div id="past-spinner" class="spinner-wrap" aria-live="polite" aria-label="Loading past events">
+          <div class="spinner"></div>
+        </div>
+        <div id="past-grid" class="past-events-grid" style="display:none;"></div>
+        <div id="past-empty" class="empty-state" style="display:none;" aria-live="polite">
+          <div class="empty-state__icon">🗂️</div>
+          <h3 class="empty-state__title">No Past Events Found</h3>
+          <p class="empty-state__desc">No past events match your search or filter criteria.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Page Script -->
+  <script type="module">
+    import { renderNavbar, renderFooter } from './assets/js/navbar.js';
+    import { initScrollReveal, initLazyLoad } from './assets/js/animations.js';
+    import supabase from './assets/js/supabase-client.js';
+
+    renderNavbar('./');
+    renderFooter('./');
+    initScrollReveal();
+
+    // ── Helpers ──────────────────────────────────────────────────
+    const typeIcons = {
+      'Workshop':       '🛠️',
+      'Seminar':        '🎓',
+      'Technical Talk': '💡',
+      'Competition':    '🏆',
+      'Industrial Visit':'🏭',
+    };
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function buildUpcomingCard(ev) {
+      const icon = typeIcons[ev.event_type] || '📋';
+      const poster = ev.poster_url
+        ? `<img class="event-card__poster" src="${ev.poster_url}" alt="${ev.title}" loading="lazy" />`
+        : `<div class="event-card__poster-placeholder">${icon}</div>`;
+
+      return `
+        <article class="event-card reveal">
+          ${poster}
+          <div class="event-card__body">
+            <span class="event-card__tag">${ev.event_type || 'Event'}</span>
+            <h3 class="event-card__title">${ev.title || 'Untitled Event'}</h3>
+            <div class="event-card__meta">
+              <div class="event-card__meta-item">📅 <span>${formatDate(ev.event_date)}</span></div>
+              ${ev.venue ? `<div class="event-card__meta-item">📍 <span>${ev.venue}</span></div>` : ''}
+              ${ev.event_time ? `<div class="event-card__meta-item">🕐 <span>${ev.event_time}</span></div>` : ''}
+            </div>
+            <p class="event-card__desc">${ev.description || ''}</p>
+          </div>
+          <div class="event-card__footer">
+            ${ev.registration_url
+              ? `<a href="${ev.registration_url}" target="_blank" rel="noopener" class="btn btn--primary btn--sm">Register Now</a>`
+              : ''}
+            ${ev.details_url
+              ? `<a href="${ev.details_url}" target="_blank" rel="noopener" class="btn btn--outline btn--sm">Learn More</a>`
+              : `<button class="btn btn--outline btn--sm" onclick="this.closest('article').classList.toggle('expanded')">Learn More</button>`}
+          </div>
+        </article>`;
+    }
+
+    function buildPastCard(ev) {
+      const icon = typeIcons[ev.event_type] || '📋';
+      const poster = ev.poster_url
+        ? `<img class="event-card__poster" src="${ev.poster_url}" alt="${ev.title}" loading="lazy" />`
+        : `<div class="event-card__poster-placeholder">${icon}</div>`;
+
+      return `
+        <article class="event-card reveal">
+          ${poster}
+          <div class="event-card__body">
+            <span class="event-card__tag">${ev.event_type || 'Event'}</span>
+            <h3 class="event-card__title">${ev.title || 'Untitled Event'}</h3>
+            <div class="event-card__meta">
+              <div class="event-card__meta-item">📅 <span>${formatDate(ev.event_date)}</span></div>
+              ${ev.venue ? `<div class="event-card__meta-item">📍 <span>${ev.venue}</span></div>` : ''}
+            </div>
+            <p class="event-card__desc">${ev.description || ''}</p>
+          </div>
+          <div class="event-card__footer">
+            ${ev.report_url
+              ? `<a href="${ev.report_url}" target="_blank" rel="noopener" class="btn btn--secondary btn--sm">View Report 📄</a>`
+              : `<span class="badge badge--secondary">Report Coming Soon</span>`}
+          </div>
+        </article>`;
+    }
+
+    function showState(gridId, spinnerId, emptyId, cards) {
+      const grid    = document.getElementById(gridId);
+      const spinner = document.getElementById(spinnerId);
+      const empty   = document.getElementById(emptyId);
+      spinner.style.display = 'none';
+      if (!cards || cards.length === 0) {
+        grid.style.display  = 'none';
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        grid.style.display  = 'grid';
+        grid.innerHTML = cards;
+        initScrollReveal();
+        initLazyLoad();
+      }
+    }
+
+    // ── Upcoming Events State ──────────────────────────────────
+    let upcomingActive = 'All';
+    let upcomingSearch = '';
+    let upcomingDebounce = null;
+
+    async function loadUpcoming() {
+      document.getElementById('upcoming-spinner').style.display = 'flex';
+      document.getElementById('upcoming-grid').style.display    = 'none';
+      document.getElementById('upcoming-empty').style.display   = 'none';
+
+      let query = supabase
+        .from('upcoming_events')
+        .select('*')
+        .order('event_date', { ascending: true });
+
+      if (upcomingActive !== 'All') {
+        query = query.eq('event_type', upcomingActive);
+      }
+      if (upcomingSearch.trim()) {
+        query = query.ilike('title', `%${upcomingSearch.trim()}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Upcoming events error:', error);
+        showState('upcoming-grid', 'upcoming-spinner', 'upcoming-empty', null);
+        return;
+      }
+
+      const cards = (data || []).map(buildUpcomingCard).join('');
+      showState('upcoming-grid', 'upcoming-spinner', 'upcoming-empty', cards);
+    }
+
+    // ── Past Events State ──────────────────────────────────────
+    let pastActive = 'All';
+    let pastSearch = '';
+    let pastDebounce = null;
+
+    async function loadPast() {
+      document.getElementById('past-spinner').style.display = 'flex';
+      document.getElementById('past-grid').style.display    = 'none';
+      document.getElementById('past-empty').style.display   = 'none';
+
+      let query = supabase
+        .from('past_events')
+        .select('*')
+        .order('event_date', { ascending: false });
+
+      if (pastActive !== 'All') {
+        query = query.eq('event_type', pastActive);
+      }
+      if (pastSearch.trim()) {
+        query = query.ilike('title', `%${pastSearch.trim()}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Past events error:', error);
+        showState('past-grid', 'past-spinner', 'past-empty', null);
+        return;
+      }
+
+      const cards = (data || []).map(buildPastCard).join('');
+      showState('past-grid', 'past-spinner', 'past-empty', cards);
+    }
+
+    // ── Wire up: Upcoming filter tabs ──────────────────────────
+    document.getElementById('upcoming-filter-tabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.filter-tab');
+      if (!tab) return;
+      document.querySelectorAll('#upcoming-filter-tabs .filter-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      upcomingActive = tab.dataset.filter;
+      loadUpcoming();
+    });
+
+    // ── Wire up: Upcoming search ───────────────────────────────
+    document.getElementById('upcoming-search').addEventListener('input', (e) => {
+      clearTimeout(upcomingDebounce);
+      upcomingSearch = e.target.value;
+      upcomingDebounce = setTimeout(loadUpcoming, 300);
+    });
+
+    // ── Wire up: Past filter tabs ──────────────────────────────
+    document.getElementById('past-filter-tabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.filter-tab');
+      if (!tab) return;
+      document.querySelectorAll('#past-filter-tabs .filter-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      pastActive = tab.dataset.filter;
+      loadPast();
+    });
+
+    // ── Wire up: Past search ───────────────────────────────────
+    document.getElementById('past-search').addEventListener('input', (e) => {
+      clearTimeout(pastDebounce);
+      pastSearch = e.target.value;
+      pastDebounce = setTimeout(loadPast, 300);
+    });
+
+    // ── Initial Load ───────────────────────────────────────────
+    loadUpcoming();
+    loadPast();
+  </script>
+</body>
+</html>

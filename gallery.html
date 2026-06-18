@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IETE Student Forum KEC — Photo gallery showcasing workshops, seminars, symposiums, industrial visits and club activities." />
+  <title>Gallery | IETE Student Forum – KEC</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/footer.css" />
+
+  <style>
+    /* ── Gallery Page Specific ── */
+    .gallery-header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .gallery-count {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      font-weight: var(--font-medium);
+    }
+
+    /* Album filter tabs */
+    .album-tabs {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    /* Gallery grid — masonry */
+    .gallery-grid {
+      columns: 4;
+      column-gap: var(--space-4);
+    }
+
+    @media (max-width: 1024px) { .gallery-grid { columns: 3; } }
+    @media (max-width: 640px)  { .gallery-grid { columns: 2; } }
+    @media (max-width: 400px)  { .gallery-grid { columns: 1; } }
+
+    .gallery-item {
+      break-inside: avoid;
+      margin-bottom: var(--space-4);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition-base), transform var(--transition-base);
+    }
+
+    .gallery-item:hover {
+      box-shadow: var(--shadow-xl);
+      transform: scale(1.01);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      display: block;
+      transition: transform var(--transition-slow);
+    }
+
+    .gallery-item:hover img { transform: scale(1.05); }
+
+    .gallery-item__overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 43, 91, 0.62);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--transition-base);
+      color: #fff;
+      padding: var(--space-3);
+      text-align: center;
+      gap: var(--space-2);
+    }
+
+    .gallery-item:hover .gallery-item__overlay { opacity: 1; }
+
+    .gallery-item__overlay-icon { font-size: 1.75rem; }
+    .gallery-item__overlay-label {
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* Badge: album label on each photo */
+    .gallery-item__album-badge {
+      position: absolute;
+      top: var(--space-2);
+      left: var(--space-2);
+      background: var(--color-secondary);
+      color: var(--color-primary);
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      padding: 0.15rem 0.6rem;
+      border-radius: var(--radius-full);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+    .gallery-item:hover .gallery-item__album-badge { opacity: 1; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-20) var(--space-4);
+      color: var(--color-text-muted);
+      width: 100%;
+    }
+    .empty-state__icon { font-size: 3.5rem; margin-bottom: var(--space-4); }
+    .empty-state__title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-2);
+    }
+    .empty-state__desc { font-size: var(--text-sm); }
+
+    /* Loading spinner */
+    .spinner-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: var(--space-20) 0;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Lightbox enhancements */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.96);
+      z-index: var(--z-modal);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-base);
+    }
+    .lightbox.active { opacity: 1; visibility: visible; }
+
+    .lightbox-img-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    #lightbox-img {
+      max-width: 90vw;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    }
+
+    #lightbox-caption {
+      color: rgba(255,255,255,0.7);
+      font-size: var(--text-sm);
+      text-align: center;
+      max-width: 600px;
+      padding: 0 var(--space-4);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: var(--space-6);
+      right: var(--space-6);
+      color: #fff;
+      font-size: 2rem;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.12);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      transition: background var(--transition-base), transform var(--transition-base);
+    }
+    .lightbox-close:hover { background: rgba(255, 255, 255, 0.25); transform: scale(1.1); }
+
+    /* Lightbox nav arrows */
+    .lightbox-prev,
+    .lightbox-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.12);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      transition: background var(--transition-base);
+    }
+    .lightbox-prev { left: var(--space-6); }
+    .lightbox-next { right: var(--space-6); }
+    .lightbox-prev:hover, .lightbox-next:hover { background: rgba(255,255,255,0.25); }
+
+    /* Gallery stats above grid */
+    .gallery-stats {
+      display: flex;
+      gap: var(--space-8);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-8);
+    }
+    .gallery-stat {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+    }
+    .gallery-stat strong { color: var(--color-primary); font-weight: var(--font-semibold); }
+  </style>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div id="navbar-placeholder"></div>
+
+  <main>
+    <!-- Page Hero -->
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Gallery</span>
+        </nav>
+        <h1>Gallery</h1>
+        <p>Moments captured — relive the energy, learning and camaraderie of IETE Student Forum events.</p>
+      </div>
+    </section>
+
+    <!-- ─────────────────── GALLERY ─────────────────── -->
+    <section class="section" id="gallery-section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">Our Memories</span>
+          <h2 class="section-title">Photo Gallery</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">Browse by album or view all photos from our activities and events.</p>
+        </div>
+
+        <!-- Album Filter Tabs + Count -->
+        <div class="gallery-header-bar reveal">
+          <div class="album-tabs" id="album-filter-tabs" role="tablist" aria-label="Filter gallery by album">
+            <button class="filter-tab active" data-album="All" role="tab" aria-selected="true">🖼️ All</button>
+            <button class="filter-tab" data-album="Workshops" role="tab" aria-selected="false">🛠️ Workshops</button>
+            <button class="filter-tab" data-album="Seminars" role="tab" aria-selected="false">🎓 Seminars</button>
+            <button class="filter-tab" data-album="Symposiums" role="tab" aria-selected="false">🎯 Symposiums</button>
+            <button class="filter-tab" data-album="Industrial Visits" role="tab" aria-selected="false">🏭 Industrial Visits</button>
+            <button class="filter-tab" data-album="Club Activities" role="tab" aria-selected="false">⚡ Club Activities</button>
+          </div>
+          <span id="photo-count" class="gallery-count"></span>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="gallery-spinner" class="spinner-wrap" aria-live="polite" aria-label="Loading gallery">
+          <div class="spinner"></div>
+        </div>
+
+        <!-- Masonry Gallery Grid -->
+        <div id="gallery-grid" class="gallery-grid" style="display:none;" role="list" aria-label="Photo gallery"></div>
+
+        <!-- Empty State -->
+        <div id="gallery-empty" class="empty-state" style="display:none;" aria-live="polite">
+          <div class="empty-state__icon">📷</div>
+          <h3 class="empty-state__title">No Photos Yet</h3>
+          <p class="empty-state__desc">Photos from our events will appear here. Check back soon!</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image lightbox">
+    <button id="lightbox-close" class="lightbox-close" aria-label="Close lightbox">×</button>
+    <button id="lightbox-prev" class="lightbox-prev" aria-label="Previous image">‹</button>
+    <div class="lightbox-img-wrap">
+      <img id="lightbox-img" src="" alt="Gallery image" />
+      <p id="lightbox-caption"></p>
+    </div>
+    <button id="lightbox-next" class="lightbox-next" aria-label="Next image">›</button>
+  </div>
+
+  <!-- Page Script -->
+  <script type="module">
+    import { renderNavbar, renderFooter } from './assets/js/navbar.js';
+    import { initScrollReveal, initLazyLoad } from './assets/js/animations.js';
+    import supabase from './assets/js/supabase-client.js';
+
+    renderNavbar('./');
+    renderFooter('./');
+    initScrollReveal();
+
+    // ── Data store ────────────────────────────────────────────
+    let allPhotos  = [];       // all fetched rows
+    let filtered   = [];       // currently visible
+    let lightboxIndex = 0;     // current lightbox position
+
+    // ── Build a single gallery item ──────────────────────────
+    function buildGalleryItem(photo, index) {
+      const url  = photo.image_url || '';
+      const desc = photo.description || photo.album || 'Gallery photo';
+      const album = photo.album || '';
+
+      return `
+        <div
+          class="gallery-item"
+          data-lightbox="${url}"
+          data-index="${index}"
+          data-desc="${desc}"
+          role="listitem"
+          tabindex="0"
+          aria-label="${desc}"
+        >
+          <img
+            data-src="${url}"
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3C/svg%3E"
+            alt="${desc}"
+            loading="lazy"
+            class="lazy"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Inter,sans-serif%22 font-size=%2248%22%3E📷%3C/text%3E%3C/svg%3E'"
+          />
+          ${album ? `<div class="gallery-item__album-badge">${album}</div>` : ''}
+          <div class="gallery-item__overlay">
+            <span class="gallery-item__overlay-icon">🔍</span>
+            ${desc ? `<span class="gallery-item__overlay-label">${desc}</span>` : ''}
+          </div>
+        </div>`;
+    }
+
+    // ── Render grid from `filtered` array ─────────────────────
+    function renderGallery() {
+      const grid    = document.getElementById('gallery-grid');
+      const empty   = document.getElementById('gallery-empty');
+      const spinner = document.getElementById('gallery-spinner');
+      const count   = document.getElementById('photo-count');
+
+      spinner.style.display = 'none';
+
+      if (filtered.length === 0) {
+        grid.style.display  = 'none';
+        empty.style.display = 'block';
+        count.textContent   = '0 photos';
+      } else {
+        empty.style.display  = 'none';
+        grid.style.display   = '';
+        count.textContent    = `${filtered.length} photo${filtered.length !== 1 ? 's' : ''}`;
+        grid.innerHTML = filtered.map((photo, i) => buildGalleryItem(photo, i)).join('');
+        initLazyLoad();
+        bindGalleryClicks();
+        initScrollReveal();
+      }
+    }
+
+    // ── Lightbox logic ────────────────────────────────────────
+    const lightbox      = document.getElementById('lightbox');
+    const lightboxImg   = document.getElementById('lightbox-img');
+    const lightboxCap   = document.getElementById('lightbox-caption');
+    const lightboxClose = document.getElementById('lightbox-close');
+    const lightboxPrev  = document.getElementById('lightbox-prev');
+    const lightboxNext  = document.getElementById('lightbox-next');
+
+    function openLightbox(index) {
+      if (!filtered[index]) return;
+      lightboxIndex = index;
+      const photo = filtered[index];
+      lightboxImg.src = photo.image_url || '';
+      lightboxCap.textContent = photo.description || photo.album || '';
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+      setTimeout(() => { lightboxImg.src = ''; }, 300);
+    }
+
+    function prevPhoto() {
+      lightboxIndex = (lightboxIndex - 1 + filtered.length) % filtered.length;
+      openLightbox(lightboxIndex);
+    }
+
+    function nextPhoto() {
+      lightboxIndex = (lightboxIndex + 1) % filtered.length;
+      openLightbox(lightboxIndex);
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxPrev.addEventListener('click', prevPhoto);
+    lightboxNext.addEventListener('click', nextPhoto);
+
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!lightbox.classList.contains('active')) return;
+      if (e.key === 'Escape')      closeLightbox();
+      if (e.key === 'ArrowLeft')   prevPhoto();
+      if (e.key === 'ArrowRight')  nextPhoto();
+    });
+
+    // ── Bind click handlers on gallery items ──────────────────
+    function bindGalleryClicks() {
+      document.querySelectorAll('.gallery-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          const idx = parseInt(item.dataset.index, 10);
+          openLightbox(idx);
+        });
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const idx = parseInt(item.dataset.index, 10);
+            openLightbox(idx);
+          }
+        });
+      });
+    }
+
+    // ── Album filter tabs ─────────────────────────────────────
+    document.getElementById('album-filter-tabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.filter-tab');
+      if (!tab) return;
+      document.querySelectorAll('#album-filter-tabs .filter-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+
+      const album = tab.dataset.album;
+      filtered = album === 'All'
+        ? [...allPhotos]
+        : allPhotos.filter(p => p.album === album);
+
+      renderGallery();
+    });
+
+    // ── Fetch gallery from Supabase ───────────────────────────
+    async function loadGallery() {
+      const { data, error } = await supabase
+        .from('gallery')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Gallery fetch error:', error);
+        document.getElementById('gallery-spinner').style.display = 'none';
+        document.getElementById('gallery-empty').style.display  = 'block';
+        return;
+      }
+
+      allPhotos = data || [];
+      filtered  = [...allPhotos];
+      renderGallery();
+    }
+
+    loadGallery();
+  </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us – IETE Student Forum KEC</title>
+  <meta name="description" content="Get in touch with the IETE Student Forum at Kongu Engineering College. Contact form, location, social links, and faculty coordinator details." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/footer.css" />
+  <style>
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    .contact-info-card {
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: var(--radius-2xl);
+      padding: var(--space-10);
+      box-shadow: var(--shadow-2xl);
+      position: sticky;
+      top: calc(var(--navbar-height) + var(--space-6));
+    }
+    .contact-info-card h3 { color: #fff; margin-bottom: var(--space-8); font-size: var(--text-2xl); }
+    .contact-detail {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-6);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .contact-detail:last-of-type { border-bottom: none; }
+    .contact-detail__icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-lg);
+      background: rgba(244,163,0,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .contact-detail__label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .contact-detail__value { color: #fff; font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+    .contact-detail__value a { color: var(--color-secondary); }
+
+    .contact-socials { display: flex; gap: var(--space-3); margin-top: var(--space-6); }
+    .contact-social-btn {
+      width: 42px; height: 42px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.7);
+      font-size: var(--text-base);
+      transition: all var(--transition-base);
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .contact-social-btn:hover { background: var(--color-secondary); color: var(--color-primary); transform: translateY(-2px); }
+
+    .contact-form-panel {
+      background: #fff;
+      border-radius: var(--radius-2xl);
+      padding: var(--space-10);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border-light);
+    }
+    .contact-form-panel h3 { color: var(--color-primary); margin-bottom: var(--space-2); font-size: var(--text-2xl); }
+    .contact-form-panel p { color: var(--color-text-muted); margin-bottom: var(--space-8); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+    .map-section {
+      border-radius: var(--radius-2xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
+      border: 3px solid #fff;
+      outline: 1px solid var(--color-border);
+      margin-top: var(--space-12);
+    }
+    .map-section iframe { display: block; }
+
+    @media (max-width: 1024px) {
+      .contact-grid { grid-template-columns: 1fr; }
+      .contact-info-card { position: static; }
+    }
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+      .contact-form-panel { padding: var(--space-6); }
+      .contact-info-card { padding: var(--space-6); }
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main>
+    <!-- Hero -->
+    <div class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Contact</span>
+        </nav>
+        <h1>📞 Contact Us</h1>
+        <p>Reach out to the IETE Student Forum — we'd love to hear from you</p>
+      </div>
+    </div>
+
+    <!-- Contact Section -->
+    <section class="section">
+      <div class="container">
+        <div class="contact-grid">
+          <!-- Info Card -->
+          <div class="contact-info-card reveal">
+            <h3>Get In Touch</h3>
+
+            <div class="contact-detail">
+              <div class="contact-detail__icon">📍</div>
+              <div>
+                <div class="contact-detail__label">Address</div>
+                <div class="contact-detail__value">
+                  Dept. of Electronics &amp; Communication Engineering,<br>
+                  Kongu Engineering College,<br>
+                  Perundurai, Erode – 638 060,<br>
+                  Tamil Nadu, India.
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-detail">
+              <div class="contact-detail__icon">✉️</div>
+              <div>
+                <div class="contact-detail__label">Club Email</div>
+                <div class="contact-detail__value">
+                  <a href="mailto:isfece.kongu@gmail.com">isfece.kongu@gmail.com</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-detail">
+              <div class="contact-detail__icon">🏛️</div>
+              <div>
+                <div class="contact-detail__label">Department</div>
+                <div class="contact-detail__value">
+                  <a href="https://kongu.edu" target="_blank" rel="noopener">Kongu Engineering College</a><br>
+                  <span style="opacity:0.6;font-size:0.85em;">NAAC Accredited | NIRF Ranked</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Faculty Coordinator (from Supabase) -->
+            <div class="contact-detail" id="faculty-contact-section" style="display:none;">
+              <div class="contact-detail__icon">👨‍🏫</div>
+              <div>
+                <div class="contact-detail__label">Faculty Coordinator</div>
+                <div class="contact-detail__value" id="faculty-contact-info">Loading...</div>
+              </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="contact-detail__label" style="margin-top:var(--space-4);">Follow Us</div>
+            <div class="contact-socials">
+              <a href="https://www.linkedin.com/in/iete-student-forum-152267417/" target="_blank" rel="noopener" class="contact-social-btn" aria-label="LinkedIn" title="LinkedIn">in</a>
+              <a href="https://www.instagram.com/isf.ece.kec?igsh=NzByNDJ4dHV0aHN4" target="_blank" rel="noopener" class="contact-social-btn" aria-label="Instagram" title="Instagram">📷</a>
+              <a href="https://www.instagram.com/isf.ece.kec?igsh=NzByNDJ4dHV0aHN4" target="_blank" rel="noopener" class="contact-social-btn" aria-label="Instagram" title="Instagram">▶</a>
+            </div>
+          </div>
+
+          <!-- Contact Form -->
+          <div class="contact-form-panel reveal reveal--right">
+            <h3>Send a Message</h3>
+            <p>Have a question or want to collaborate? Drop us a message.</p>
+
+            <form id="contact-form" novalidate>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="cf-name">Full Name *</label>
+                  <input type="text" id="cf-name" class="form-control" placeholder="Your full name" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="cf-email">Email Address *</label>
+                  <input type="email" id="cf-email" class="form-control" placeholder="your@email.com" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="cf-phone">Phone Number</label>
+                  <input type="tel" id="cf-phone" class="form-control" placeholder="+91 XXXXX XXXXX" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="cf-subject">Subject *</label>
+                  <input type="text" id="cf-subject" class="form-control" placeholder="Message subject" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cf-category">Category</label>
+                <select id="cf-category" class="form-control form-select">
+                  <option value="General">General Inquiry</option>
+                  <option value="Membership">Membership</option>
+                  <option value="Event">Event Related</option>
+                  <option value="Collaboration">Collaboration</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cf-message">Message *</label>
+                <textarea id="cf-message" class="form-control" placeholder="Write your message here..." rows="5" required></textarea>
+              </div>
+
+              <!-- Success/Error banner -->
+              <div id="form-banner" style="display:none;padding:var(--space-4);border-radius:var(--radius-lg);margin-bottom:var(--space-4);font-size:var(--text-sm);font-weight:var(--font-medium);"></div>
+
+              <button type="submit" class="btn btn--primary btn--full btn--lg" id="cf-submit">
+                <span id="cf-btn-text">Send Message ✉️</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div class="section-header" style="margin-top:var(--space-20);">
+          <div class="section-label">Find Us</div>
+          <h2 class="section-title">Our Location</h2>
+          <p class="section-subtitle">Kongu Engineering College, Perundurai, Erode, Tamil Nadu</p>
+        </div>
+        <div class="map-section reveal">
+          <iframe
+            src="https://maps.google.com/maps?q=Kongu+Engineering+College,+Perundurai,+Erode&t=&z=15&ie=UTF8&iwloc=&output=embed"
+            width="100%"
+            height="450"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Kongu Engineering College Location Map"
+          ></iframe>
+        </div>
+        <p style="text-align:center;margin-top:var(--space-4);">
+          <a href="https://maps.app.goo.gl/ybgKju52RVaHR7j2A" target="_blank" rel="noopener" class="btn btn--outline" style="margin:0 auto;">
+            Open in Google Maps ↗
+          </a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { renderNavbar, renderFooter } from './assets/js/navbar.js';
+    import { initScrollReveal, showToast } from './assets/js/animations.js';
+    import supabase from './assets/js/supabase-client.js';
+
+    renderNavbar('./');
+    renderFooter('./');
+    initScrollReveal();
+
+    // Load Faculty Coordinator contact info
+    async function loadFacultyContact() {
+      const { data } = await supabase
+        .from('faculty')
+        .select('name, designation, email')
+        .eq('role', 'coordinator')
+        .limit(1)
+        .single();
+
+      if (data) {
+        const section = document.getElementById('faculty-contact-section');
+        const info = document.getElementById('faculty-contact-info');
+        info.innerHTML = `
+          <strong>${data.name}</strong><br>
+          ${data.designation || ''}<br>
+          ${data.email ? `<a href="mailto:${data.email}" style="color:var(--color-secondary)">${data.email}</a>` : ''}
+        `;
+        section.style.display = 'flex';
+      }
+    }
+    loadFacultyContact();
+
+    // Contact form submission
+    const form = document.getElementById('contact-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('cf-submit');
+      const btnText = document.getElementById('cf-btn-text');
+      const banner = document.getElementById('form-banner');
+      const name = document.getElementById('cf-name').value.trim();
+      const email = document.getElementById('cf-email').value.trim();
+      const subject = document.getElementById('cf-subject').value.trim();
+      const message = document.getElementById('cf-message').value.trim();
+      const phone = document.getElementById('cf-phone').value.trim();
+      const category = document.getElementById('cf-category').value;
+
+      if (!name || !email || !subject || !message) {
+        banner.style.display = 'block';
+        banner.style.background = 'var(--color-danger-light)';
+        banner.style.color = 'var(--color-danger)';
+        banner.textContent = '⚠️ Please fill in all required fields.';
+        return;
+      }
+      if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        banner.style.display = 'block';
+        banner.style.background = 'var(--color-danger-light)';
+        banner.style.color = 'var(--color-danger)';
+        banner.textContent = '⚠️ Please enter a valid email address.';
+        return;
+      }
+
+      btn.disabled = true;
+      btnText.textContent = 'Sending...';
+      banner.style.display = 'none';
+
+      try {
+        const { error } = await supabase.from('contact_messages').insert([{
+          name, email, phone: phone || null, subject, message, category,
+          created_at: new Date().toISOString(),
+          is_read: false,
+        }]);
+
+        if (error) throw error;
+
+        banner.style.display = 'block';
+        banner.style.background = 'var(--color-success-light)';
+        banner.style.color = 'var(--color-success)';
+        banner.textContent = '✓ Message sent successfully! We will get back to you soon.';
+        form.reset();
+        showToast('Message sent successfully!', 'success');
+      } catch (err) {
+        banner.style.display = 'block';
+        banner.style.background = 'var(--color-danger-light)';
+        banner.style.color = 'var(--color-danger)';
+        banner.textContent = '✕ Failed to send message. Please try again or email us directly.';
+        showToast('Failed to send. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Send Message ✉️';
+      }
+    });
+  </script>
+</body>
+</html>

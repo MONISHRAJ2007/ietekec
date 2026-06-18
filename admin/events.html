@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Events Management – IETE Admin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../assets/css/variables.css" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    /* Tab styles */
+    .admin-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-5); }
+    .admin-tab-btn {
+      padding: 0.65rem var(--space-5);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    .admin-tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+    .admin-tab-panel { display: none; }
+    .admin-tab-panel.active { display: block; }
+
+    /* Modal overlay */
+    .admin-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+    .admin-modal-overlay.open { display: flex; }
+    .admin-modal {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .admin-modal__header {
+      padding: var(--space-5) var(--space-6);
+      border-bottom: 1px solid var(--color-border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 1;
+    }
+    .admin-modal__title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: var(--font-semibold); color: var(--color-primary); }
+    .admin-modal__close { background: none; border: none; font-size: 1.5rem; color: var(--color-text-muted); cursor: pointer; line-height: 1; padding: 0.25rem; }
+    .admin-modal__body { padding: var(--space-6); flex: 1; }
+    .admin-modal__footer { padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border-light); display: flex; justify-content: flex-end; gap: var(--space-3); }
+
+    /* Form control formatting */
+    .form-group { margin-bottom: var(--space-4); }
+    .form-label { display: block; font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--color-text); margin-bottom: var(--space-2); }
+    .form-label .optional { font-weight: normal; color: var(--color-text-muted); font-size: var(--text-xs); }
+    .form-control {
+      width: 100%;
+      padding: 0.6rem var(--space-3);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      color: var(--color-text);
+      background: #fff;
+      transition: border-color var(--transition-base);
+      box-sizing: border-box;
+    }
+    .form-control:focus { outline: none; border-color: var(--color-primary); }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+
+    /* Badge markers */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+    }
+    .badge--blue { background: var(--color-primary-100); color: var(--color-primary); }
+    .badge--gold { background: var(--color-secondary-100); color: var(--color-secondary-dark); }
+    .badge--green { background: var(--color-success-light); color: var(--color-success); }
+
+    /* Empty elements state */
+    .empty-state { text-align: center; padding: var(--space-10) var(--space-6); color: var(--color-text-muted); }
+    .empty-state__icon { font-size: 3rem; margin-bottom: var(--space-3); }
+    .empty-state__text { font-size: var(--text-sm); }
+  </style>
+</head>
+<body class="admin-body">
+<div class="admin-wrapper">
+
+  <!-- ── Sidebar ── -->
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar__brand">
+      <img src="../assets/images/iete-logo.png" alt="IETE" class="admin-sidebar__brand-logo" />
+      <div class="admin-sidebar__brand-text">
+        <div class="admin-sidebar__brand-title">IETE Admin</div>
+        <div class="admin-sidebar__brand-subtitle">KEC Dashboard</div>
+      </div>
+    </div>
+    <nav class="admin-sidebar__nav">
+      <div class="admin-sidebar__section-label">Main</div>
+      <a href="dashboard.html" class="admin-nav-link"><span class="admin-nav-link__icon">📊</span>Dashboard</a>
+      <a href="announcements.html" class="admin-nav-link"><span class="admin-nav-link__icon">📢</span>Announcements</a>
+      <a href="events.html" class="admin-nav-link active"><span class="admin-nav-link__icon">📅</span>Events</a>
+      <a href="gallery.html" class="admin-nav-link"><span class="admin-nav-link__icon">🖼️</span>Gallery</a>
+      <div class="admin-sidebar__section-label">Team</div>
+      <a href="team.html" class="admin-nav-link"><span class="admin-nav-link__icon">👥</span>Team Members</a>
+      <a href="faculty.html" class="admin-nav-link"><span class="admin-nav-link__icon">👨‍🏫</span>Faculty</a>
+      <a href="achievements.html" class="admin-nav-link"><span class="admin-nav-link__icon">🏆</span>Achievements</a>
+      <div class="admin-sidebar__section-label">Other</div>
+      <a href="messages.html" class="admin-nav-link"><span class="admin-nav-link__icon">✉️</span>Messages</a>
+      <a href="settings.html" class="admin-nav-link"><span class="admin-nav-link__icon">⚙️</span>Settings</a>
+    </nav>
+    <div class="admin-sidebar__footer">
+      <div class="admin-user-card">
+        <div class="admin-user-avatar" id="admin-user-avatar">A</div>
+        <div>
+          <div class="admin-user-name" id="admin-user-name">Admin</div>
+          <div class="admin-user-role" id="admin-user-role">Administrator</div>
+        </div>
+      </div>
+      <button class="admin-logout-btn" id="logout-btn">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="admin-topbar__left">
+        <button class="admin-sidebar-toggle" id="sidebar-toggle">☰</button>
+        <h1 class="admin-page-title">Events Management</h1>
+      </div>
+      <div class="admin-topbar__right">
+        <a href="../index.html" class="btn btn--outline btn--sm" target="_blank">🌐 View Site</a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="admin-panel">
+        <div class="admin-panel__body">
+
+          <!-- Tabs -->
+          <div class="admin-tabs">
+            <button class="admin-tab-btn active" data-tab="upcoming">📅 Upcoming Events</button>
+            <button class="admin-tab-btn" data-tab="past">📁 Past Events</button>
+          </div>
+
+          <!-- Upcoming Tab -->
+          <div class="admin-tab-panel active" id="tab-upcoming">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-4);">
+              <button class="btn btn--primary btn--sm" id="add-upcoming-btn">+ Add Upcoming Event</button>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Venue</th>
+                    <th>Time</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="upcoming-table-body">
+                  <tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">⏳</div><div class="empty-state__text">Loading…</div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Past Tab -->
+          <div class="admin-tab-panel" id="tab-past">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-4);">
+              <button class="btn btn--primary btn--sm" id="add-past-btn">+ Add Past Event</button>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Venue</th>
+                    <th>Speakers</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="past-table-body">
+                  <tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">⏳</div><div class="empty-state__text">Loading…</div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ── Add/Edit Modal ── -->
+<div class="admin-modal-overlay" id="event-modal">
+  <div class="admin-modal">
+    <div class="admin-modal__header">
+      <h2 class="admin-modal__title" id="modal-title">Add Event</h2>
+      <button class="admin-modal__close" id="modal-close">×</button>
+    </div>
+    <div class="admin-modal__body">
+      <input type="hidden" id="edit-id" />
+      <input type="hidden" id="edit-table" />
+      <input type="hidden" id="existing-poster-url" />
+
+      <div class="form-group">
+        <label class="form-label">Event Title</label>
+        <input type="text" id="ev-title" class="form-control" placeholder="Event title" required />
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+        <div class="form-group">
+          <label class="form-label">Event Type</label>
+          <select id="ev-type" class="form-control">
+            <option value="Workshop">Workshop</option>
+            <option value="Seminar">Seminar</option>
+            <option value="Technical Talk">Technical Talk</option>
+            <option value="Competition">Competition</option>
+            <option value="Industrial Visit">Industrial Visit</option>
+            <option value="Event">Event</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="date" id="ev-date" class="form-control" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Venue</label>
+        <input type="text" id="ev-venue" class="form-control" placeholder="e.g. Seminar Hall, Block A" />
+      </div>
+
+      <!-- Upcoming Event Only Fields -->
+      <div id="upcoming-fields" class="conditional-fields">
+        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:var(--space-4);">
+          <div class="form-group">
+            <label class="form-label">Event Time <span class="optional">(optional)</span></label>
+            <input type="text" id="ev-time" class="form-control" placeholder="e.g. 10:00 AM" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Registration URL <span class="optional">(optional)</span></label>
+            <input type="text" id="ev-reg-url" class="form-control" placeholder="Google Form or external link" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Details URL <span class="optional">(optional)</span></label>
+          <input type="text" id="ev-details-url" class="form-control" placeholder="More information link" />
+        </div>
+      </div>
+
+      <!-- Past Event Only Fields -->
+      <div id="past-fields" class="conditional-fields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Speakers <span class="optional">(optional)</span></label>
+          <input type="text" id="ev-speakers" class="form-control" placeholder="e.g. Mr. Rajesh Kumar (Intel), Dr. S. Priya" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Outcomes <span class="optional">(optional)</span></label>
+          <input type="text" id="ev-outcomes" class="form-control" placeholder="e.g. Students gained hands-on experience in VLSI tools" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report PDF URL <span class="optional">(optional)</span></label>
+          <input type="text" id="ev-report-url" class="form-control" placeholder="Link to event report PDF (e.g. Google Drive/Storage)" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="ev-description" class="form-control" placeholder="Brief description of the event…"></textarea>
+      </div>
+
+      <!-- Poster Upload -->
+      <div class="form-group">
+        <label class="form-label">Event Poster</label>
+        <div class="admin-upload-zone" id="poster-zone">
+          <input type="file" accept="image/*" id="poster-file-input" />
+          <div class="admin-upload-icon">🖼️</div>
+          <div class="admin-upload-text">Click or drag to upload poster</div>
+          <div class="admin-upload-hint">JPG, PNG, WEBP • Max 5MB</div>
+        </div>
+        <div id="poster-preview" style="display:none; margin-top:var(--space-3);"></div>
+      </div>
+    </div>
+    <div class="admin-modal__footer">
+      <button class="btn btn--secondary btn--sm" id="modal-cancel">Cancel</button>
+      <button class="btn btn--primary btn--sm" id="modal-save">
+        <span id="save-btn-text">Save Event</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { requireAuth, populateAdminUser, logout } from '../assets/js/auth.js';
+  import supabase from '../assets/js/supabase-client.js';
+  import { showToast } from '../assets/js/animations.js';
+
+  // ── Auth Guard ──
+  await requireAuth();
+  await populateAdminUser();
+  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    document.getElementById('admin-sidebar').classList.toggle('open');
+  });
+
+  // ── Tab switching ──
+  const tabBtns = document.querySelectorAll('.admin-tab-btn');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Image compression utility ──
+  async function compressImage(file, maxWidth = 1200, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Compression failed')), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // ── Poster upload zone logic ──
+  let selectedPosterFile = null;
+  const posterZone = document.getElementById('poster-zone');
+  const posterPreview = document.getElementById('poster-preview');
+  const posterInput = document.getElementById('poster-file-input');
+
+  posterInput.addEventListener('change', () => { if (posterInput.files[0]) handlePosterFile(posterInput.files[0]); });
+  posterZone.addEventListener('dragover', e => { e.preventDefault(); posterZone.classList.add('drag-over'); });
+  posterZone.addEventListener('dragleave', () => posterZone.classList.remove('drag-over'));
+  posterZone.addEventListener('drop', e => {
+    e.preventDefault(); posterZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handlePosterFile(e.dataTransfer.files[0]);
+  });
+
+  function handlePosterFile(file) {
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/i)) { showToast('Only JPG, PNG, WEBP images allowed.', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB.', 'error'); return; }
+    selectedPosterFile = file;
+    const src = URL.createObjectURL(file);
+    posterZone.style.display = 'none';
+    posterPreview.style.display = 'block';
+    posterPreview.innerHTML = `
+      <div class="img-preview-card">
+        <img src="${src}" alt="Poster Preview" style="width:100%;height:180px;object-fit:cover;border-radius:var(--radius-lg);" />
+        <div class="img-preview-card__overlay">
+          <button type="button" class="btn btn--sm btn--secondary" id="poster-change">Change</button>
+          <button type="button" class="btn btn--sm btn--danger" id="poster-remove">Remove</button>
+        </div>
+      </div>`;
+    document.getElementById('poster-change').addEventListener('click', resetPosterUpload);
+    document.getElementById('poster-remove').addEventListener('click', () => {
+      resetPosterUpload();
+      document.getElementById('existing-poster-url').value = '';
+    });
+  }
+
+  function resetPosterUpload() {
+    selectedPosterFile = null;
+    posterPreview.innerHTML = ''; posterPreview.style.display = 'none';
+    posterZone.style.display = ''; posterInput.value = '';
+  }
+
+  async function uploadPoster() {
+    if (!selectedPosterFile) return document.getElementById('existing-poster-url').value || null;
+    try {
+      const compressed = await compressImage(selectedPosterFile);
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+      const path = `event-posters/${fileName}`;
+      const { error } = await supabase.storage.from('event-posters').upload(path, new File([compressed], fileName, { type: 'image/jpeg' }), { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('event-posters').getPublicUrl(path);
+      return data.publicUrl;
+    } catch (err) {
+      console.error('Poster upload failed:', err);
+      showToast('Poster upload failed.', 'error');
+      return null;
+    }
+  }
+
+  // ── Load events ──
+  async function loadUpcoming() {
+    const tbody = document.getElementById('upcoming-table-body');
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">⏳</div><div class="empty-state__text">Loading…</div></div></td></tr>';
+    const { data, error } = await supabase.from('upcoming_events').select('*').order('event_date', { ascending: true });
+    
+    if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:red;padding:1rem;">Error: ${error.message}</td></tr>`; return; }
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">📅</div><div class="empty-state__text">No upcoming events yet.</div></div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(ev => `
+      <tr>
+        <td><strong>${escHtml(ev.title)}</strong></td>
+        <td><span class="badge badge--blue">${escHtml(ev.event_type || '')}</span></td>
+        <td style="white-space:nowrap;">${ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '—'}</td>
+        <td>${escHtml(ev.venue || '—')}</td>
+        <td>${escHtml(ev.event_time || '—')}</td>
+        <td class="admin-table__actions">
+          <button class="btn-edit" onclick="editEvent('upcoming_events','${ev.id}')">Edit</button>
+          <button class="btn-delete" onclick="deleteEvent('upcoming_events','${ev.id}')">Delete</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function loadPast() {
+    const tbody = document.getElementById('past-table-body');
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">⏳</div><div class="empty-state__text">Loading…</div></div></td></tr>';
+    const { data, error } = await supabase.from('past_events').select('*').order('event_date', { ascending: false });
+    
+    if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:red;padding:1rem;">Error: ${error.message}</td></tr>`; return; }
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">📁</div><div class="empty-state__text">No past events yet.</div></div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(ev => `
+      <tr>
+        <td><strong>${escHtml(ev.title)}</strong></td>
+        <td><span class="badge badge--gold">${escHtml(ev.event_type || '')}</span></td>
+        <td style="white-space:nowrap;">${ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '—'}</td>
+        <td>${escHtml(ev.venue || '—')}</td>
+        <td>${escHtml(ev.speakers || '—')}</td>
+        <td class="admin-table__actions">
+          <button class="btn-edit" onclick="editEvent('past_events','${ev.id}')">Edit</button>
+          <button class="btn-delete" onclick="deleteEvent('past_events','${ev.id}')">Delete</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  // ── Modal Actions ──
+  function openModal(title, isUpcoming = true) {
+    document.getElementById('modal-title').textContent = title;
+    
+    if (isUpcoming) {
+      document.getElementById('upcoming-fields').style.display = 'block';
+      document.getElementById('past-fields').style.display = 'none';
+    } else {
+      document.getElementById('upcoming-fields').style.display = 'none';
+      document.getElementById('past-fields').style.display = 'block';
+    }
+
+    document.getElementById('event-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('event-modal').classList.remove('open');
+    clearForm();
+  }
+
+  function clearForm() {
+    document.getElementById('edit-id').value = '';
+    document.getElementById('edit-table').value = '';
+    document.getElementById('existing-poster-url').value = '';
+    document.getElementById('ev-title').value = '';
+    document.getElementById('ev-type').value = 'Workshop';
+    document.getElementById('ev-date').value = '';
+    document.getElementById('ev-venue').value = '';
+    document.getElementById('ev-description').value = '';
+    document.getElementById('ev-report-url').value = '';
+    document.getElementById('ev-time').value = '';
+    document.getElementById('ev-reg-url').value = '';
+    document.getElementById('ev-details-url').value = '';
+    document.getElementById('ev-speakers').value = '';
+    document.getElementById('ev-outcomes').value = '';
+    resetPosterUpload();
+  }
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('event-modal').addEventListener('click', e => { if (e.target === document.getElementById('event-modal')) closeModal(); });
+
+  // ── Add triggers ──
+  document.getElementById('add-upcoming-btn').addEventListener('click', () => {
+    clearForm();
+    document.getElementById('edit-table').value = 'upcoming_events';
+    openModal('Add Upcoming Event', true);
+  });
+  document.getElementById('add-past-btn').addEventListener('click', () => {
+    clearForm();
+    document.getElementById('edit-table').value = 'past_events';
+    openModal('Add Past Event', false);
+  });
+
+  // ── Edit Trigger ──
+  window.editEvent = async function(table, id) {
+    const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+    if (error || !data) { showToast('Failed to load event details.', 'error'); return; }
+    
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-table').value = table;
+    document.getElementById('ev-title').value = data.title || '';
+    document.getElementById('ev-type').value = data.event_type || 'Workshop';
+    document.getElementById('ev-date').value = data.event_date || '';
+    document.getElementById('ev-venue').value = data.venue || '';
+    document.getElementById('ev-description').value = data.description || '';
+    document.getElementById('existing-poster-url').value = data.poster_url || '';
+
+    const isUpcoming = (table === 'upcoming_events');
+    if (isUpcoming) {
+      document.getElementById('ev-time').value = data.event_time || '';
+      document.getElementById('ev-reg-url').value = data.registration_url || '';
+      document.getElementById('ev-details-url').value = data.details_url || '';
+    } else {
+      document.getElementById('ev-speakers').value = data.speakers || '';
+      document.getElementById('ev-outcomes').value = data.outcomes || '';
+      document.getElementById('ev-report-url').value = data.report_url || '';
+    }
+
+    if (data.poster_url) {
+      posterZone.style.display = 'none';
+      posterPreview.style.display = 'block';
+      posterPreview.innerHTML = `
+        <div class="img-preview-card">
+          <img src="${data.poster_url}" alt="Poster" style="width:100%;height:180px;object-fit:cover;border-radius:var(--radius-lg);" />
+          <div class="img-preview-card__overlay">
+            <button type="button" class="btn btn--sm btn--secondary" id="poster-change">Change</button>
+            <button type="button" class="btn btn--sm btn--danger" id="poster-remove">Remove</button>
+          </div>
+        </div>`;
+      document.getElementById('poster-change').addEventListener('click', resetPosterUpload);
+      document.getElementById('poster-remove').addEventListener('click', () => {
+        resetPosterUpload();
+        document.getElementById('existing-poster-url').value = '';
+      });
+    } else {
+      resetPosterUpload();
+    }
+    
+    openModal('Edit Event', isUpcoming);
+  };
+
+  // ── Delete Trigger ──
+  window.deleteEvent = async function(table, id) {
+    if (!confirm('Delete this event? This cannot be undone.')) return;
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+    showToast('Event deleted successfully.', 'success');
+    await loadUpcoming();
+    await loadPast();
+  };
+
+  // ── Save Operation ──
+  document.getElementById('modal-save').addEventListener('click', async () => {
+    const id = document.getElementById('edit-id').value;
+    const table = document.getElementById('edit-table').value;
+    const title = document.getElementById('ev-title').value.trim();
+    if (!title) { showToast('Event title is required.', 'error'); return; }
+
+    const btnText = document.getElementById('save-btn-text');
+    btnText.textContent = 'Saving…';
+    document.getElementById('modal-save').disabled = true;
+
+    const posterUrl = await uploadPoster();
+
+    const payload = {
+      title,
+      event_type: document.getElementById('ev-type').value,
+      event_date: document.getElementById('ev-date').value || null,
+      venue: document.getElementById('ev-venue').value.trim() || null,
+      description: document.getElementById('ev-description').value.trim() || null
+    };
+
+    if (posterUrl !== undefined && posterUrl !== null) {
+      payload.poster_url = posterUrl;
+    }
+
+    if (table === 'upcoming_events') {
+      payload.event_time = document.getElementById('ev-time').value.trim() || null;
+      payload.registration_url = document.getElementById('ev-reg-url').value.trim() || null;
+      payload.details_url = document.getElementById('ev-details-url').value.trim() || null;
+      payload.is_active = true;
+    } else {
+      payload.speakers = document.getElementById('ev-speakers').value.trim() || null;
+      payload.outcomes = document.getElementById('ev-outcomes').value.trim() || null;
+      payload.report_url = document.getElementById('ev-report-url').value.trim() || null;
+    }
+
+    let error;
+    if (id) {
+      ({ error } = await supabase.from(table).update(payload).eq('id', id));
+    } else {
+      ({ error } = await supabase.from(table).insert(payload));
+    }
+
+    btnText.textContent = 'Save Event';
+    document.getElementById('modal-save').disabled = false;
+
+    if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
+    
+    showToast('Event saved successfully.', 'success');
+    closeModal();
+    await loadUpcoming();
+    await loadPast();
+  });
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Init Load ──
+  await loadUpcoming();
+  await loadPast();
+</script>
+</body>
+</html>

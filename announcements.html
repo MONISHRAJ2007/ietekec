@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Announcements – IETE Student Forum KEC</title>
+  <meta name="description" content="Latest announcements, notices, and updates from the IETE Student Forum at Kongu Engineering College." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/footer.css" />
+  <style>
+    .announcements-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+      flex-wrap: wrap;
+    }
+    .announcements-toolbar .search-bar { flex: 1; min-width: 220px; }
+    .announcements-list { display: flex; flex-direction: column; gap: var(--space-4); }
+    .ann-card-full {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border-light);
+      border-left: 4px solid var(--color-primary);
+      padding: var(--space-5) var(--space-6);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+      cursor: pointer;
+    }
+    .ann-card-full--pinned { border-left-color: var(--color-secondary); }
+    .ann-card-full:hover { box-shadow: var(--shadow-lg); transform: translateX(4px); }
+    .ann-card-full__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-3); }
+    .ann-card-full__title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: var(--font-semibold); color: var(--color-primary); }
+    .ann-card-full__meta { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+    .ann-card-full__body { font-size: var(--text-sm); color: var(--color-text-muted); line-height: var(--leading-relaxed); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .ann-modal-body { white-space: pre-wrap; line-height: var(--leading-relaxed); }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main>
+    <!-- Hero -->
+    <div class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Announcements</span>
+        </nav>
+        <h1>📢 Announcements</h1>
+        <p>Stay updated with the latest notices, events, and news from IETE Student Forum KEC</p>
+      </div>
+    </div>
+
+    <!-- Announcements Section -->
+    <section class="section">
+      <div class="container">
+        <!-- Toolbar -->
+        <div class="announcements-toolbar">
+          <div class="search-bar">
+            <span class="search-bar__icon">🔍</span>
+            <input type="text" id="ann-search" placeholder="Search announcements..." aria-label="Search announcements" />
+          </div>
+          <div class="filter-tabs" id="category-filters" role="tablist">
+            <button class="filter-tab active" data-cat="All" role="tab" aria-selected="true">All</button>
+            <button class="filter-tab" data-cat="Notice" role="tab">Notices</button>
+            <button class="filter-tab" data-cat="Event" role="tab">Events</button>
+            <button class="filter-tab" data-cat="Membership" role="tab">Membership</button>
+            <button class="filter-tab" data-cat="Workshop" role="tab">Workshops</button>
+          </div>
+        </div>
+
+        <!-- Results count -->
+        <p id="results-count" style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-5);"></p>
+
+        <!-- Announcements List -->
+        <div id="announcements-list">
+          <div class="flex-center" style="padding:var(--space-16);"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" aria-label="Pagination"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Detail Modal -->
+  <div class="modal-backdrop" id="ann-modal" role="dialog" aria-modal="true" aria-labelledby="ann-modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="ann-modal-title">Announcement</h3>
+        <button class="btn-close" id="ann-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="ann-modal-meta" style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-5);"></div>
+        <div id="ann-modal-body" class="ann-modal-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { renderNavbar, renderFooter } from './assets/js/navbar.js';
+    import { initScrollReveal } from './assets/js/animations.js';
+    import supabase from './assets/js/supabase-client.js';
+
+    renderNavbar('./');
+    renderFooter('./');
+    initScrollReveal();
+
+    const PER_PAGE = 10;
+    let allData = [];
+    let filtered = [];
+    let currentPage = 1;
+    let currentCat = 'All';
+    let searchTerm = '';
+
+    // Load all announcements
+    async function loadAll() {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+        document.getElementById('announcements-list').innerHTML =
+          `<div class="empty-state"><div class="empty-state__icon">⚠️</div><h3>Unable to load</h3><p>Please configure Supabase credentials.</p></div>`;
+        return;
+      }
+      allData = data;
+      applyFilters();
+    }
+
+    function applyFilters() {
+      filtered = allData.filter(a => {
+        const matchCat = currentCat === 'All' || a.category === currentCat;
+        const matchSearch = !searchTerm || a.title?.toLowerCase().includes(searchTerm) || a.content?.toLowerCase().includes(searchTerm);
+        return matchCat && matchSearch;
+      });
+      currentPage = 1;
+      renderPage();
+    }
+
+    function renderPage() {
+      const count = document.getElementById('results-count');
+      count.textContent = `${filtered.length} announcement${filtered.length !== 1 ? 's' : ''} found`;
+
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = filtered.slice(start, start + PER_PAGE);
+      const list = document.getElementById('announcements-list');
+
+      if (!pageItems.length) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-state__icon">📭</div><h3>No announcements found</h3><p>Try a different filter or search term.</p></div>`;
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+
+      list.innerHTML = `<div class="announcements-list">${pageItems.map((a, i) => `
+        <div class="ann-card-full ${a.is_pinned ? 'ann-card-full--pinned' : ''} reveal reveal-delay-${Math.min(i, 5)}"
+             data-id="${a.id}" role="button" tabindex="0" aria-label="View announcement: ${escHtml(a.title)}"
+             ${a.redirect_url ? `title="Click to visit: ${escHtml(a.redirect_url)}"` : ''}>
+          ${a.brochure_image ? `
+          <div style="margin:-1.25rem -1.5rem 1.25rem -1.5rem; border-radius: calc(var(--radius-xl) - 1px) calc(var(--radius-xl) - 1px) 0 0; overflow: hidden; border-bottom: 1px solid var(--color-border-light);">
+            <img src="${escHtml(a.brochure_image)}" alt="Brochure" style="width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block;" loading="lazy" />
+          </div>` : ''}
+          <div class="ann-card-full__header">
+            <div class="ann-card-full__title">${escHtml(a.title)}</div>
+            ${a.is_pinned ? `<span class="badge badge--secondary">📌 Pinned</span>` : ''}
+          </div>
+          <div class="ann-card-full__meta" style="margin-bottom:var(--space-3);">
+            <span class="badge badge--primary">${escHtml(a.category || 'Notice')}</span>
+            <span style="font-size:var(--text-xs);color:var(--color-text-light);">📅 ${formatDate(a.created_at)}</span>
+            ${a.redirect_url ? `<span style="font-size:var(--text-xs);color:var(--color-primary);font-weight:var(--font-medium);">🔗 Redirect Link</span>` : ''}
+          </div>
+          <div class="ann-card-full__body">${escHtml(a.content || '')}</div>
+        </div>`).join('')}</div>`;
+
+      // Click handlers
+      list.querySelectorAll('.ann-card-full').forEach(card => {
+        const id = card.dataset.id;
+        const item = allData.find(x => String(x.id) === String(id));
+        const handler = () => {
+          if (item && item.redirect_url) {
+            window.open(item.redirect_url, '_blank');
+          } else {
+            openModal(id);
+          }
+        };
+        card.addEventListener('click', handler);
+        card.addEventListener('keydown', e => { if (e.key === 'Enter') handler(); });
+      });
+
+      renderPagination();
+      initScrollReveal();
+    }
+
+    function renderPagination() {
+      const total = Math.ceil(filtered.length / PER_PAGE);
+      const pg = document.getElementById('pagination');
+      if (total <= 1) { pg.innerHTML = ''; return; }
+
+      let html = '';
+      if (currentPage > 1) html += `<button class="page-btn" data-page="${currentPage - 1}">←</button>`;
+      for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || Math.abs(i - currentPage) <= 1) {
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        } else if (Math.abs(i - currentPage) === 2) {
+          html += `<span style="padding:0 4px;color:var(--color-text-light);">…</span>`;
+        }
+      }
+      if (currentPage < total) html += `<button class="page-btn" data-page="${currentPage + 1}">→</button>`;
+      pg.innerHTML = html;
+
+      pg.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentPage = parseInt(btn.dataset.page);
+          renderPage();
+          window.scrollTo({ top: 300, behavior: 'smooth' });
+        });
+      });
+    }
+
+    function openModal(id) {
+      const a = allData.find(x => String(x.id) === String(id));
+      if (!a) return;
+      document.getElementById('ann-modal-title').textContent = a.title;
+      document.getElementById('ann-modal-meta').innerHTML = `
+        <span class="badge badge--primary">${escHtml(a.category || 'Notice')}</span>
+        ${a.is_pinned ? `<span class="badge badge--secondary">📌 Pinned</span>` : ''}
+        <span style="font-size:var(--text-sm);color:var(--color-text-muted);">📅 ${formatDate(a.created_at)}</span>
+      `;
+      document.getElementById('ann-modal-body').innerHTML = `
+        ${a.brochure_image ? `<img src="${escHtml(a.brochure_image)}" style="width:100%;height:auto;border-radius:var(--radius-lg);margin-bottom:var(--space-4);" alt="Brochure" />` : ''}
+        <div style="white-space:pre-wrap;">${escHtml(a.content || '')}</div>
+      `;
+      document.getElementById('ann-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    document.getElementById('ann-modal-close').addEventListener('click', () => {
+      document.getElementById('ann-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    });
+    document.getElementById('ann-modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('ann-modal').classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Filter tabs
+    document.getElementById('category-filters').addEventListener('click', e => {
+      if (e.target.classList.contains('filter-tab')) {
+        document.querySelectorAll('.filter-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        e.target.classList.add('active');
+        e.target.setAttribute('aria-selected', 'true');
+        currentCat = e.target.dataset.cat;
+        applyFilters();
+      }
+    });
+
+    // Search with debounce
+    let searchTimer;
+    document.getElementById('ann-search').addEventListener('input', e => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        searchTerm = e.target.value.trim().toLowerCase();
+        applyFilters();
+      }, 300);
+    });
+
+    function formatDate(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Meet the IETE Student Forum team at Kongu Engineering College — faculty coordinators and student office bearers leading our chapter forward." />
+  <title>Our Team | IETE Student Forum – KEC</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/navbar.css" />
+  <link rel="stylesheet" href="assets/css/footer.css" />
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ── Team Hero ── */
+    .team-hero {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 60%, #1e4fa0 100%);
+      padding: calc(var(--navbar-height) + var(--space-20)) 0 var(--space-20);
+      text-align: center;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .team-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(244,163,0,0.08) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .team-hero__content { position: relative; z-index: 1; }
+    .team-hero h1 { color: #fff; margin-bottom: var(--space-4); }
+    .team-hero p { color: rgba(255,255,255,0.85); font-size: var(--text-lg); max-width: 560px; margin: 0 auto; }
+
+    /* ── Loading Spinner ── */
+    .spinner-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-20) 0;
+      gap: var(--space-4);
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-label {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      font-family: var(--font-heading);
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-16) var(--space-8);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .empty-state__icon {
+      font-size: 4rem;
+      margin-bottom: var(--space-5);
+      display: block;
+    }
+    .empty-state h3 {
+      font-size: var(--text-xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-3);
+    }
+    .empty-state p {
+      font-size: var(--text-base);
+      color: var(--color-text-muted);
+      line-height: var(--leading-relaxed);
+    }
+
+    /* ── Faculty Card ── */
+    .faculty-card {
+      background: #fff;
+      border-radius: var(--radius-2xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border-light);
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      padding: var(--space-6) var(--space-8);
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+      position: relative;
+    }
+    .faculty-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 5px;
+      background: linear-gradient(to bottom, var(--color-primary), var(--color-secondary));
+      border-radius: var(--radius-full) 0 0 var(--radius-full);
+    }
+    .faculty-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+    .faculty-card__avatar {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--color-secondary);
+      box-shadow: 0 4px 16px rgba(244,163,0,0.2);
+      flex-shrink: 0;
+    }
+    .faculty-card__avatar-placeholder {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 2rem;
+      font-weight: var(--font-bold);
+      font-family: var(--font-heading);
+      border: 3px solid var(--color-secondary);
+      flex-shrink: 0;
+    }
+    .faculty-card__info { flex: 1; }
+    .faculty-card__name {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: var(--font-semibold);
+      color: var(--color-primary);
+      margin-bottom: var(--space-1);
+    }
+    .faculty-card__role {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--color-secondary-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--space-2);
+    }
+    .faculty-card__dept {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-3);
+    }
+    .faculty-card__contact {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .faculty-contact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: var(--text-xs);
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: var(--font-medium);
+      padding: 0.2rem 0.8rem;
+      border-radius: var(--radius-full);
+      background: var(--color-primary-50);
+      border: 1px solid var(--color-primary-200);
+      transition: all var(--transition-base);
+    }
+    .faculty-contact-link:hover { background: var(--color-primary); color: #fff; }
+
+    /* ── Role Section Header ── */
+    .role-section {
+      margin-bottom: var(--space-16);
+    }
+    .role-section:last-child { margin-bottom: 0; }
+    .role-section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+    .role-section-header__line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--color-border), transparent);
+    }
+    .role-section-header__title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--color-primary);
+      white-space: nowrap;
+      padding: var(--space-2) var(--space-5);
+      background: var(--color-secondary-100);
+      border: 1px solid var(--color-secondary);
+      border-radius: var(--radius-full);
+    }
+    .role-section-header__line--right {
+      background: linear-gradient(to left, var(--color-border), transparent);
+    }
+
+    /* ── Override team-card for grid ── */
+    .team-grid { display: grid; gap: var(--space-6); }
+    .team-grid--1 { grid-template-columns: minmax(0, 420px); justify-content: center; }
+    .team-grid--2 { grid-template-columns: repeat(2, 1fr); max-width: 820px; margin: 0 auto; }
+    .team-grid--3 { grid-template-columns: repeat(3, 1fr); }
+    .team-grid--4 { grid-template-columns: repeat(4, 1fr); }
+
+    @media (max-width: 1024px) {
+      .team-grid--4 { grid-template-columns: repeat(2, 1fr); }
+      .team-grid--3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .faculty-card { flex-direction: column; text-align: center; padding: var(--space-8) var(--space-6); }
+      .faculty-card::before { width: 100%; height: 5px; top: 0; bottom: auto; right: 0; border-radius: var(--radius-full) var(--radius-full) 0 0; }
+      .faculty-card__contact { justify-content: center; }
+      .team-grid--2, .team-grid--3, .team-grid--4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .team-grid--1, .team-grid--2, .team-grid--3, .team-grid--4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div id="navbar-placeholder"></div>
+
+  <main>
+
+    <!-- ══════════════════════════════════════
+         HERO
+    ══════════════════════════════════════ -->
+    <section class="team-hero">
+      <div class="container team-hero__content">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="justify-content:center;">
+          <a href="./index.html">Home</a>
+          <span class="breadcrumb-sep">›</span>
+          <span>Our Team</span>
+        </nav>
+        <h1 class="hero-anim-1">Our <span style="color:var(--color-secondary)">Team</span></h1>
+        <p class="hero-anim-2">Meet the dedicated faculty coordinators and passionate student leaders who drive the IETE Student Forum at Kongu Engineering College.</p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION 1: Faculty Coordinators
+    ══════════════════════════════════════ -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">Guidance</span>
+          <h2 class="section-title">Faculty Coordinators</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">Our experienced faculty coordinators provide expert mentorship, strategic direction, and unwavering support to the IETE Student Forum.</p>
+        </div>
+
+        <!-- Faculty container: populated by JS -->
+        <div id="faculty-container">
+          <div class="spinner-wrap" id="faculty-loading">
+            <div class="spinner" aria-label="Loading"></div>
+            <span class="spinner-label">Loading faculty coordinators…</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION 2: Student Office Bearers
+    ══════════════════════════════════════ -->
+    <section class="section section--alt">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-label">Leadership</span>
+          <h2 class="section-title">Student Office Bearers</h2>
+          <div class="divider"></div>
+          <p class="section-subtitle">The elected student leaders who organize events, drive initiatives, and represent IETE Student Forum at Kongu Engineering College.</p>
+        </div>
+
+        <!-- Team container: populated by JS -->
+        <div id="team-container">
+          <div class="spinner-wrap" id="team-loading">
+            <div class="spinner" aria-label="Loading"></div>
+            <span class="spinner-label">Loading team members…</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Page Script -->
+  <script type="module">
+    import { renderNavbar, renderFooter } from './assets/js/navbar.js';
+    import { initScrollReveal, initCounters } from './assets/js/animations.js';
+    import { supabase } from './assets/js/supabase-client.js';
+
+    renderNavbar('./');
+    renderFooter('./');
+
+    // ─── Role ordering for student office bearers ─────────────────────────────
+    const roleOrder = [
+      'Chairman',
+      'Vice Chairman',
+      'Secretary',
+      'Treasurer',
+      'Joint Secretary',
+      'Technical Coordinator',
+      'Executive Member',
+    ];
+
+    // ─── Grid column class based on count ────────────────────────────────────
+    function gridClass(count) {
+      if (count === 1) return 'team-grid--1';
+      if (count === 2) return 'team-grid--2';
+      if (count === 3) return 'team-grid--3';
+      return 'team-grid--4';
+    }
+
+    // ─── Build avatar HTML ─────────────────────────────────────────────────
+    function avatarHtml(photoUrl, name, cssClass, placeholderClass) {
+      const initials = name
+        ? name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+        : '?';
+      if (photoUrl) {
+        return `<img src="${photoUrl}" alt="${name}" class="${cssClass}" loading="lazy"
+                     onerror="this.outerHTML='<div class=\\'${placeholderClass}\\'>${initials}</div>'" />`;
+      }
+      return `<div class="${placeholderClass}">${initials}</div>`;
+    }
+
+    // ─── Social links HTML ────────────────────────────────────────────────
+    function socialLinksHtml(linkedin, github, instagram) {
+      const links = [];
+      if (linkedin)   links.push(`<a href="${linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">in</a>`);
+      if (github)     links.push(`<a href="${github}"   target="_blank" rel="noopener" aria-label="GitHub"   title="GitHub">gh</a>`);
+      if (instagram)  links.push(`<a href="${instagram}" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">📷</a>`);
+      if (!links.length) return '';
+      return `<div class="team-card__social">${links.join('')}</div>`;
+    }
+
+    // ─── Render Faculty Coordinators ─────────────────────────────────────
+    async function loadFaculty() {
+      const container = document.getElementById('faculty-container');
+
+      try {
+        const { data, error } = await supabase
+          .from('faculty')
+          .select('*')
+          .eq('role', 'coordinator')
+          .order('display_order', { ascending: true });
+
+        // Remove loading spinner
+        container.innerHTML = '';
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state reveal">
+              <span class="empty-state__icon">👨‍🏫</span>
+              <h3>Faculty details coming soon</h3>
+              <p>Faculty coordinator information will be available here shortly. Please check back later.</p>
+            </div>`;
+          initScrollReveal();
+          return;
+        }
+
+        // Build faculty grid
+        const gridEl = document.createElement('div');
+        gridEl.style.cssText = 'display:flex;flex-direction:column;gap:var(--space-5)';
+
+        data.forEach((f, i) => {
+          const delay = (i % 4) + 1;
+          const card = document.createElement('div');
+          card.className = `faculty-card reveal reveal-delay-${delay}`;
+          card.innerHTML = `
+            ${avatarHtml(f.photo_url, f.name, 'faculty-card__avatar', 'faculty-card__avatar-placeholder')}
+            <div class="faculty-card__info">
+              <div class="faculty-card__name">${f.name || 'Faculty Coordinator'}</div>
+              <div class="faculty-card__role">${f.designation || 'Faculty Coordinator'}</div>
+              <div class="faculty-card__dept">${f.department || 'Dept. of ECE, Kongu Engineering College'}</div>
+              <div class="faculty-card__contact">
+                ${f.email    ? `<a href="mailto:${f.email}"         class="faculty-contact-link">✉ ${f.email}</a>`        : ''}
+                ${f.phone    ? `<a href="tel:${f.phone}"            class="faculty-contact-link">📞 ${f.phone}</a>`        : ''}
+                ${f.linkedin ? `<a href="${f.linkedin}" target="_blank" rel="noopener" class="faculty-contact-link">in LinkedIn</a>` : ''}
+              </div>
+            </div>`;
+          gridEl.appendChild(card);
+        });
+
+        container.appendChild(gridEl);
+
+      } catch (err) {
+        console.error('Faculty load error:', err);
+        container.innerHTML = `
+          <div class="empty-state reveal">
+            <span class="empty-state__icon">👨‍🏫</span>
+            <h3>Faculty details coming soon</h3>
+            <p>Faculty coordinator information will be available here shortly.</p>
+          </div>`;
+      }
+
+      initScrollReveal();
+    }
+
+    // ─── Render Student Team ──────────────────────────────────────────────
+    async function loadTeam() {
+      const container = document.getElementById('team-container');
+
+      try {
+        const { data, error } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        // Remove loading spinner
+        container.innerHTML = '';
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state reveal">
+              <span class="empty-state__icon">👥</span>
+              <h3>Team profiles coming soon</h3>
+              <p>Our student office bearers' profiles will be published here soon. Stay tuned for the exciting team reveal!</p>
+            </div>`;
+          initScrollReveal();
+          return;
+        }
+
+        // Group members by role using roleOrder
+        const grouped = {};
+        roleOrder.forEach(r => { grouped[r] = []; });
+
+        data.forEach(member => {
+          const role = member.role || 'Executive Member';
+          if (grouped[role]) {
+            grouped[role].push(member);
+          } else {
+            // Unknown role – append at end
+            if (!grouped['__other__']) grouped['__other__'] = [];
+            grouped['__other__'].push(member);
+          }
+        });
+
+        // If there's an __other__ group, append it at end
+        if (grouped['__other__']) {
+          roleOrder.push('__other__');
+        }
+
+        const roles = [...roleOrder, ...Object.keys(grouped).filter(r => !roleOrder.includes(r))];
+
+        roles.forEach(role => {
+          const members = grouped[role];
+          if (!members || members.length === 0) return;
+
+          const roleLabel = role === '__other__' ? 'Other Members' : role;
+
+          // Role section wrapper
+          const sectionEl = document.createElement('div');
+          sectionEl.className = 'role-section reveal';
+
+          // Role header
+          sectionEl.innerHTML = `
+            <div class="role-section-header">
+              <div class="role-section-header__line"></div>
+              <div class="role-section-header__title">🎖️ ${roleLabel}</div>
+              <div class="role-section-header__line role-section-header__line--right"></div>
+            </div>`;
+
+          // Cards grid
+          const gridEl = document.createElement('div');
+          gridEl.className = `team-grid ${gridClass(members.length)}`;
+
+          members.forEach((m, i) => {
+            const delay = (i % 4) + 1;
+            const cardEl = document.createElement('div');
+            cardEl.className = `team-card reveal reveal-delay-${delay}`;
+            cardEl.innerHTML = `
+              ${avatarHtml(m.photo_url, m.name, 'team-card__avatar', 'team-card__avatar-placeholder')}
+              <div class="team-card__badge">${roleLabel}</div>
+              <div class="team-card__name">${m.name || 'Team Member'}</div>
+              ${m.department ? `<div style="font-size:var(--text-sm);color:var(--color-text-muted);margin-top:var(--space-1)">${m.department}</div>` : ''}
+              ${m.year       ? `<div style="font-size:var(--text-xs);color:var(--color-text-light);margin-top:2px">${m.year}</div>` : ''}
+              ${socialLinksHtml(m.linkedin_url, m.github_url, m.instagram_url)}`;
+            gridEl.appendChild(cardEl);
+          });
+
+          sectionEl.appendChild(gridEl);
+          container.appendChild(sectionEl);
+        });
+
+      } catch (err) {
+        console.error('Team load error:', err);
+        container.innerHTML = `
+          <div class="empty-state reveal">
+            <span class="empty-state__icon">👥</span>
+            <h3>Team profiles coming soon</h3>
+            <p>Our student office bearers' profiles will be published here soon. Stay tuned!</p>
+          </div>`;
+      }
+
+      initScrollReveal();
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────
+    initScrollReveal();
+    initCounters();
+
+    // Load data in parallel
+    await Promise.all([loadFaculty(), loadTeam()]);
+
+    // Re-run scroll reveal after dynamic content
+    initScrollReveal();
+  </script>
+
+</body>
+</html>

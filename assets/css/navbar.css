@@ -1,0 +1,246 @@
+/* ============================================================
+   IETE Student Forum – KEC | Navbar Styles
+   ============================================================ */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-light);
+  z-index: var(--z-sticky);
+  transition: box-shadow var(--transition-base), background var(--transition-base);
+}
+
+.navbar.scrolled {
+  box-shadow: 0 4px 20px rgba(15,43,91,0.1);
+  background: rgba(255,255,255,0.99);
+}
+
+.navbar__inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* ── Brand ── */
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.navbar__logo {
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+  transition: transform var(--transition-base);
+}
+.navbar__logo:hover { transform: scale(1.05); }
+
+.navbar__logo-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--color-border);
+}
+
+.navbar__brand-text {
+  display: flex;
+  flex-direction: column;
+}
+.navbar__brand-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+.navbar__brand-subtitle {
+  font-size: 0.65rem;
+  font-weight: var(--font-medium);
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── Nav Links ── */
+.navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  list-style: none;
+}
+
+.navbar__nav-link {
+  display: block;
+  padding: 0.45rem 0.75rem;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  position: relative;
+  white-space: nowrap;
+}
+
+.navbar__nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  right: 50%;
+  height: 2px;
+  background: var(--color-secondary);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.navbar__nav-link:hover {
+  color: var(--color-primary);
+  background: var(--color-primary-50);
+}
+
+.navbar__nav-link:hover::after,
+.navbar__nav-link.active::after {
+  left: 0.75rem;
+  right: 0.75rem;
+}
+
+.navbar__nav-link.active {
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
+  background: var(--color-primary-50);
+}
+
+/* ── Admin Button ── */
+.navbar__admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.45rem 1rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-heading);
+  transition: all var(--transition-base);
+  text-decoration: none;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-primary);
+}
+.navbar__admin-btn:hover {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-secondary);
+}
+
+/* ── Hamburger ── */
+.navbar__hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-base);
+  background: none;
+  border: none;
+}
+.navbar__hamburger:hover { background: var(--color-bg-alt); }
+.navbar__hamburger-line {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.navbar__hamburger.active .navbar__hamburger-line:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.navbar__hamburger.active .navbar__hamburger-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.navbar__hamburger.active .navbar__hamburger-line:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* ── Mobile Menu ── */
+.navbar__mobile {
+  position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-4) var(--container-pad);
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-base);
+  z-index: calc(var(--z-sticky) - 1);
+  max-height: calc(100vh - var(--navbar-height));
+  overflow-y: auto;
+}
+.navbar__mobile.active {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.navbar__mobile-nav { list-style: none; display: flex; flex-direction: column; gap: var(--space-1); }
+.navbar__mobile-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  border-left: 3px solid transparent;
+}
+.navbar__mobile-link:hover,
+.navbar__mobile-link.active {
+  background: var(--color-primary-50);
+  color: var(--color-primary);
+  border-left-color: var(--color-secondary);
+}
+.navbar__mobile-admin {
+  display: block;
+  margin-top: var(--space-4);
+  padding: 0.75rem 1rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-semibold);
+  text-align: center;
+  text-decoration: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .navbar__nav-link { padding: 0.45rem 0.55rem; font-size: var(--text-xs); }
+}
+
+@media (max-width: 900px) {
+  .navbar__nav { display: none; }
+  .navbar__admin-btn { display: none; }
+  .navbar__hamburger { display: flex; }
+  .navbar__brand-text { display: none; }
+}
+
+@media (max-width: 400px) {
+  .navbar__logo { height: 38px; }
+}

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery – IETE Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../assets/css/variables.css" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    /* Gallery layout */
+    .gallery-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--space-5);
+      align-items: start;
+    }
+    @media (max-width: 768px) { .gallery-layout { grid-template-columns: 1fr; } }
+
+    /* Album panel */
+    .album-panel {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      position: sticky;
+      top: 80px;
+    }
+    .album-panel__header {
+      padding: var(--space-4) var(--space-5);
+      background: var(--color-primary);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-weight: var(--font-semibold);
+      font-size: var(--text-sm);
+    }
+    .album-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.7rem var(--space-5);
+      background: none;
+      border: none;
+      border-left: 3px solid transparent;
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    .album-btn:hover { background: var(--color-bg-alt); }
+    .album-btn.active { background: var(--color-primary-50); color: var(--color-primary); font-weight: var(--font-semibold); border-left-color: var(--color-primary); }
+
+    /* Gallery grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .gallery-img-item {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--color-border-light);
+      aspect-ratio: 4/3;
+      background: var(--color-bg-alt);
+      cursor: pointer;
+    }
+    .gallery-img-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+    .gallery-img-item:hover img { transform: scale(1.05); }
+    .gallery-img-item__del {
+      position: absolute; top: 5px; right: 5px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(239,68,68,0.9);
+      color: #fff;
+      border: none;
+      font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 2;
+    }
+    .gallery-img-item:hover .gallery-img-item__del { opacity: 1; }
+
+    /* Lightbox */
+    .lightbox-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-overlay.open { display: flex; }
+    .lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); }
+    .lightbox-close {
+      position: absolute; top: var(--space-4); right: var(--space-6);
+      color: #fff; font-size: 2rem;
+      background: none; border: none; cursor: pointer;
+    }
+
+    /* Progress bar for upload */
+    .upload-progress { margin-top: var(--space-3); }
+    .progress-bar { height: 6px; background: var(--color-border); border-radius: 99px; overflow: hidden; margin-top: var(--space-2); }
+    .progress-bar__fill { height: 100%; background: var(--color-success); transition: width 0.3s; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: var(--space-10) var(--space-6); color: var(--color-text-muted); }
+    .empty-state__icon { font-size: 3rem; margin-bottom: var(--space-3); }
+  </style>
+</head>
+<body class="admin-body">
+<div class="admin-wrapper">
+
+  <!-- ── Sidebar ── -->
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="admin-sidebar__brand">
+      <img src="../assets/images/iete-logo.png" alt="IETE" class="admin-sidebar__brand-logo" />
+      <div class="admin-sidebar__brand-text">
+        <div class="admin-sidebar__brand-title">IETE Student Forum</div>
+        <div class="admin-sidebar__brand-subtitle">KEC Admin Panel</div>
+      </div>
+    </div>
+    <nav class="admin-sidebar__nav">
+      <div class="admin-sidebar__section-label">Main</div>
+      <a href="dashboard.html" class="admin-nav-link">
+        <span class="admin-nav-link__icon">📊</span> Dashboard
+      </a>
+      <div class="admin-sidebar__section-label">Content</div>
+      <a href="events.html" class="admin-nav-link">
+        <span class="admin-nav-link__icon">📅</span> Events
+      </a>
+      <a href="gallery.html" class="admin-nav-link active">
+        <span class="admin-nav-link__icon">🖼️</span> Gallery
+      </a>
+      <a href="achievements.html" class="admin-nav-link">
+        <span class="admin-nav-link__icon">🏆</span> Achievements
+      </a>
+      <div class="admin-sidebar__section-label">People</div>
+      <a href="team.html" class="admin-nav-link">
+        <span class="admin-nav-link__icon">👥</span> Team Members
+      </a>
+      <a href="faculty.html" class="admin-nav-link">
+        <span class="admin-nav-link__icon">🎓</span> Faculty
+      </a>
+    </nav>
+    <div class="admin-sidebar__footer">
+      <div class="admin-user-card">
+        <div class="admin-user-avatar" id="admin-user-avatar">A</div>
+        <div>
+          <div class="admin-user-name" id="admin-user-name">Admin</div>
+          <div class="admin-user-role" id="admin-user-role">Administrator</div>
+        </div>
+      </div>
+      <button class="admin-logout-btn" id="logout-btn"><span>🚪</span> Logout</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="admin-topbar__left">
+        <button class="admin-sidebar-toggle" id="sidebar-toggle">☰</button>
+        <h1 class="admin-page-title">Gallery</h1>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="gallery-layout">
+
+        <!-- Album Selector -->
+        <div class="album-panel">
+          <div class="album-panel__header">📁 Albums</div>
+          <div id="album-list">
+            <button class="album-btn active" data-album="Workshops">🔧 Workshops</button>
+            <button class="album-btn" data-album="Seminars">🎤 Seminars</button>
+            <button class="album-btn" data-album="Symposiums">🏛️ Symposiums</button>
+            <button class="album-btn" data-album="Industrial Visits">🏭 Industrial Visits</button>
+            <button class="album-btn" data-album="Club Activities">⭐ Club Activities</button>
+          </div>
+        </div>
+
+        <!-- Main Upload & Gallery Area -->
+        <div>
+          <!-- Upload Panel -->
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title">📤 Upload to: <span id="current-album-label">Workshops</span></span>
+            </div>
+            <div class="admin-panel__body">
+              <div class="admin-upload-zone" id="gallery-upload-zone">
+                <input type="file" accept="image/*" multiple id="gallery-file-input" />
+                <div class="admin-upload-icon">📁</div>
+                <div class="admin-upload-text">Drop multiple images here</div>
+                <div class="admin-upload-hint">Select all at once • JPG/PNG/WEBP • Max 5MB each</div>
+              </div>
+
+              <div class="bulk-preview-grid" id="bulk-preview-grid"></div>
+
+              <div id="upload-progress-area" style="display:none;" class="upload-progress">
+                <div style="font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--color-text);" id="upload-status-text">Uploading…</div>
+                <div class="progress-bar"><div class="progress-bar__fill" id="upload-overall-bar" style="width:0%"></div></div>
+              </div>
+
+              <div style="margin-top:var(--space-4);display:flex;justify-content:flex-end;">
+                <button class="btn btn--primary btn--sm" id="upload-all-btn" style="display:none;">📤 Upload All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Existing Images -->
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title">🖼️ Existing Images</span>
+              <span id="img-count" style="font-size:var(--text-xs);color:var(--color-text-muted);">0 images</span>
+            </div>
+            <div class="admin-panel__body">
+              <div class="gallery-grid" id="existing-gallery-grid">
+                <div class="empty-state"><div class="empty-state__icon">🖼️</div><p style="font-size:var(--text-sm);">No images in this album yet.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">×</button>
+  <img src="" alt="Gallery image" id="lightbox-img" />
+</div>
+
+<script type="module">
+  import { requireAuth, populateAdminUser, logout } from '../assets/js/auth.js';
+  import supabase from '../assets/js/supabase-client.js';
+
+  await requireAuth();
+  await populateAdminUser();
+  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    document.getElementById('admin-sidebar').classList.toggle('open');
+  });
+
+  let currentAlbum = 'Workshops';
+  const fileQueue = new Map(); // key → { file, objectUrl, uploaded }
+
+  // ── Album switching ──
+  document.querySelectorAll('.album-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.album-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAlbum = btn.dataset.album;
+      document.getElementById('current-album-label').textContent = currentAlbum;
+      clearQueue();
+      loadExistingImages();
+    });
+  });
+
+  // ── Image compression ──
+  async function compressImage(file, maxWidth = 1400, quality = 0.82) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('fail')), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // ── File queue logic ──
+  const galleryInput = document.getElementById('gallery-file-input');
+  const uploadZone = document.getElementById('gallery-upload-zone');
+  const previewGrid = document.getElementById('bulk-preview-grid');
+
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); addFiles(Array.from(e.dataTransfer.files)); });
+  galleryInput.addEventListener('change', () => { addFiles(Array.from(galleryInput.files)); galleryInput.value = ''; });
+
+  function addFiles(files) {
+    const valid = files.filter(f => f.type.match(/image\/(jpeg|jpg|png|webp)/i) && f.size <= 5 * 1024 * 1024);
+    if (valid.length < files.length) alert('Some files skipped: must be JPG/PNG/WEBP under 5MB.');
+    valid.forEach(file => {
+      const key = `${file.name}-${file.lastModified}-${file.size}`;
+      if (fileQueue.has(key)) return;
+      const objectUrl = URL.createObjectURL(file);
+      fileQueue.set(key, { file, objectUrl, uploaded: false });
+      renderQueueItem(key, objectUrl, file.name);
+    });
+    document.getElementById('upload-all-btn').style.display = fileQueue.size > 0 ? '' : 'none';
+  }
+
+  function renderQueueItem(key, objectUrl, name) {
+    const safeKey = key.replace(/[^a-z0-9]/gi, '_');
+    const item = document.createElement('div');
+    item.className = 'bulk-item';
+    item.id = `qi-${safeKey}`;
+    item.innerHTML = `
+      <img src="${objectUrl}" alt="${name}" />
+      <div class="bulk-item__progress"><div class="bulk-item__progress-fill" id="fill-${safeKey}" style="width:0%"></div></div>
+      <button type="button" class="bulk-item__remove" title="Remove" data-key="${key}">×</button>`;
+    item.querySelector('.bulk-item__remove').addEventListener('click', () => {
+      fileQueue.delete(key);
+      item.remove();
+      URL.revokeObjectURL(objectUrl);
+      document.getElementById('upload-all-btn').style.display = fileQueue.size > 0 ? '' : 'none';
+    });
+    previewGrid.appendChild(item);
+  }
+
+  function clearQueue() {
+    fileQueue.forEach(entry => URL.revokeObjectURL(entry.objectUrl));
+    fileQueue.clear();
+    previewGrid.innerHTML = '';
+    document.getElementById('upload-all-btn').style.display = 'none';
+    document.getElementById('upload-progress-area').style.display = 'none';
+  }
+
+  // ── Upload all ──
+  document.getElementById('upload-all-btn').addEventListener('click', async () => {
+    if (fileQueue.size === 0) return;
+    const btn = document.getElementById('upload-all-btn');
+    btn.disabled = true; btn.textContent = 'Uploading…';
+    const progressArea = document.getElementById('upload-progress-area');
+    const statusText = document.getElementById('upload-status-text');
+    const bar = document.getElementById('upload-overall-bar');
+    progressArea.style.display = 'block';
+
+    const entries = Array.from(fileQueue.entries());
+    let done = 0;
+    const urls = [];
+
+    for (const [key, entry] of entries) {
+      const safeKey = key.replace(/[^a-z0-9]/gi, '_');
+      const fill = document.getElementById(`fill-${safeKey}`);
+      statusText.textContent = `Uploading ${entry.file.name}…`;
+      try {
+        const compressed = await compressImage(entry.file);
+        if (fill) fill.style.width = '50%';
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const albumFolder = currentAlbum.toLowerCase().replace(/\s+/g, '-');
+        const path = `${albumFolder}/${fileName}`;
+        const { error: upErr } = await supabase.storage.from('gallery-images').upload(path, new File([compressed], fileName, { type: 'image/jpeg' }), { upsert: true });
+        if (upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from('gallery-images').getPublicUrl(path);
+        const publicUrl = urlData.publicUrl;
+        // Save to DB
+        await supabase.from('gallery').insert({ album: currentAlbum, image_url: publicUrl, storage_path: path });
+        if (fill) fill.style.width = '100%';
+        urls.push(publicUrl);
+      } catch (err) {
+        console.error('Upload error', entry.file.name, err);
+        if (fill) { fill.style.background = 'var(--color-danger)'; fill.style.width = '100%'; }
+      }
+      done++;
+      bar.style.width = `${Math.round((done / entries.length) * 100)}%`;
+    }
+
+    statusText.textContent = `✓ ${urls.length} of ${entries.length} images uploaded successfully!`;
+    btn.disabled = false; btn.textContent = '📤 Upload All';
+    await loadExistingImages();
+    // Clear queue of successfully uploaded items after 2 seconds
+    setTimeout(() => clearQueue(), 2000);
+  });
+
+  // ── Load existing images ──
+  async function loadExistingImages() {
+    const grid = document.getElementById('existing-gallery-grid');
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state__icon">⏳</div><p style="font-size:var(--text-sm);">Loading…</p></div>';
+    const { data, error } = await supabase.from('gallery').select('*').eq('album', currentAlbum).order('created_at', { ascending: false });
+    if (error) { grid.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; return; }
+    document.getElementById('img-count').textContent = `${data?.length || 0} images`;
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state__icon">🖼️</div><p style="font-size:var(--text-sm);">No images in this album yet.</p></div>';
+      return;
+    }
+    grid.innerHTML = data.map(img => `
+      <div class="gallery-img-item" data-id="${img.id}" data-path="${escAttr(img.storage_path || '')}">
+        <img src="${escAttr(img.image_url)}" alt="Gallery" loading="lazy" />
+        <button class="gallery-img-item__del" title="Delete" data-id="${img.id}" data-path="${escAttr(img.storage_path || '')}">×</button>
+      </div>`).join('');
+
+    // Delete buttons
+    grid.querySelectorAll('.gallery-img-item__del').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        if (!confirm('Delete this image?')) return;
+        const id = btn.dataset.id;
+        const path = btn.dataset.path;
+        if (path) await supabase.storage.from('gallery-images').remove([path]);
+        await supabase.from('gallery').delete().eq('id', id);
+        await loadExistingImages();
+      });
+    });
+
+    // Lightbox
+    grid.querySelectorAll('.gallery-img-item').forEach(item => {
+      item.addEventListener('click', e => {
+        if (e.target.classList.contains('gallery-img-item__del')) return;
+        const src = item.querySelector('img').src;
+        document.getElementById('lightbox-img').src = src;
+        document.getElementById('lightbox').classList.add('open');
+      });
+    });
+  }
+
+  // Lightbox close
+  document.getElementById('lightbox-close').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
+  document.getElementById('lightbox').addEventListener('click', e => { if (e.target === document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('open'); });
+
+  function escAttr(str) { return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  await loadExistingImages();
+</script>
+</body>
+</html>

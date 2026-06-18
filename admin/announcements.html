@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Announcements – IETE Admin KEC</title>
+  <link rel="stylesheet" href="../assets/css/variables.css" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    /* ── Filter Tabs ── */
+    .filter-tabs {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      padding: 0.35rem 0.9rem;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+      cursor: pointer;
+      border: 1.5px solid var(--color-border);
+      background: #fff;
+      color: var(--color-text-muted);
+      transition: all var(--transition-base);
+      font-family: var(--font-heading);
+    }
+
+    .filter-tab:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .filter-tab.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+    /* ── Search ── */
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 180px;
+      max-width: 320px;
+    }
+
+    .search-input-wrap input {
+      width: 100%;
+      padding: 0.5rem var(--space-4) 0.5rem 2.2rem;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      background: #fff;
+      box-sizing: border-box;
+      transition: border-color var(--transition-base);
+    }
+
+    .search-input-wrap input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-muted);
+      pointer-events: none;
+      font-size: 0.9rem;
+    }
+
+    /* ── Category Badge ── */
+    .cat-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-semibold);
+    }
+
+    .cat-badge--notice      { background: var(--color-info-light);    color: var(--color-info); }
+    .cat-badge--event       { background: var(--color-secondary-100); color: var(--color-secondary-dark); }
+    .cat-badge--membership  { background: var(--color-success-light); color: var(--color-success); }
+    .cat-badge--workshop    { background: var(--color-primary-100);   color: var(--color-primary); }
+    .cat-badge--competition { background: var(--color-danger-light);  color: var(--color-danger); }
+
+    /* ── Pinned indicator ── */
+    .pin-icon { font-size: 1rem; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: var(--z-modal);
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: #fff;
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-2xl);
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      animation: modalIn 0.25s ease both;
+    }
+
+    @keyframes modalIn {
+      from { opacity:0; transform: scale(0.95) translateY(-10px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      padding: var(--space-5) var(--space-6);
+      border-bottom: 1px solid var(--color-border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-base);
+      font-weight: var(--font-semibold);
+      color: var(--color-primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: var(--space-1);
+      border-radius: var(--radius-md);
+      transition: background var(--transition-base);
+    }
+
+    .modal-close:hover { background: var(--color-bg-alt); }
+
+    .modal-body {
+      padding: var(--space-6);
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: var(--space-4) var(--space-6);
+      border-top: 1px solid var(--color-border-light);
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    /* ── Form elements in modal ── */
+    .form-group { margin-bottom: var(--space-5); }
+    .form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 0.65rem var(--space-4);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      color: var(--color-text);
+      background: var(--color-bg-alt);
+      transition: border-color var(--transition-base), box-shadow var(--transition-base);
+      box-sizing: border-box;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    .form-textarea { resize: vertical; min-height: 120px; }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      cursor: pointer;
+    }
+
+    .toggle-wrap input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-4) 0;
+    }
+
+    .page-btn {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--color-border);
+      background: #fff;
+      font-size: var(--text-sm);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .page-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .page-info { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-10);
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+
+    /* ── Confirm dialog ── */
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: calc(var(--z-modal) + 10);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .confirm-overlay.open { display: flex; }
+
+    .confirm-card {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow-2xl);
+    }
+
+    .confirm-icon { font-size: 2.5rem; margin-bottom: var(--space-3); }
+    .confirm-title { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--color-primary); margin-bottom: var(--space-2); }
+    .confirm-msg { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-6); }
+    .confirm-actions { display: flex; gap: var(--space-3); justify-content: center; }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-sidebar__brand">
+        <img src="../assets/images/iete-logo.png" class="admin-sidebar__brand-logo" alt="IETE" onerror="this.style.display='none'" />
+        <div class="admin-sidebar__brand-text">
+          <div class="admin-sidebar__brand-title">IETE Admin</div>
+          <div class="admin-sidebar__brand-subtitle">KEC Dashboard</div>
+        </div>
+      </div>
+      <nav class="admin-sidebar__nav">
+        <div class="admin-sidebar__section-label">Main</div>
+        <a href="dashboard.html"      class="admin-nav-link"><span class="admin-nav-link__icon">📊</span>Dashboard</a>
+        <a href="announcements.html"  class="admin-nav-link active"><span class="admin-nav-link__icon">📢</span>Announcements</a>
+        <a href="events.html"         class="admin-nav-link"><span class="admin-nav-link__icon">📅</span>Events</a>
+        <a href="gallery.html"        class="admin-nav-link"><span class="admin-nav-link__icon">🖼️</span>Gallery</a>
+        <div class="admin-sidebar__section-label">Team</div>
+        <a href="team.html"           class="admin-nav-link"><span class="admin-nav-link__icon">👥</span>Team Members</a>
+        <a href="faculty.html"        class="admin-nav-link"><span class="admin-nav-link__icon">👨‍🏫</span>Faculty</a>
+        <a href="achievements.html"   class="admin-nav-link"><span class="admin-nav-link__icon">🏆</span>Achievements</a>
+        <div class="admin-sidebar__section-label">Other</div>
+        <a href="messages.html"       class="admin-nav-link"><span class="admin-nav-link__icon">✉️</span>Messages</a>
+        <a href="settings.html"       class="admin-nav-link"><span class="admin-nav-link__icon">⚙️</span>Settings</a>
+      </nav>
+      <div class="admin-sidebar__footer">
+        <div class="admin-user-card">
+          <div class="admin-user-avatar" id="admin-user-avatar">A</div>
+          <div>
+            <div class="admin-user-name" id="admin-user-name">Admin</div>
+            <div class="admin-user-role" id="admin-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="admin-logout-btn" id="logout-btn">🚪 Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div class="admin-topbar__left">
+          <button class="admin-sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+          <div class="admin-page-title">Announcements</div>
+        </div>
+        <div class="admin-topbar__right">
+          <a href="../index.html" class="btn btn--outline btn--sm" target="_blank">🌐 View Site</a>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <div class="admin-panel">
+          <!-- Toolbar -->
+          <div class="admin-panel__header">
+            <div class="admin-panel__title">📢 All Announcements</div>
+            <button class="btn btn--primary btn--sm" id="add-btn">＋ Add New</button>
+          </div>
+
+          <div class="admin-panel__toolbar">
+            <!-- Search -->
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="search" id="search-input" placeholder="Search announcements…" />
+            </div>
+            <!-- Category Tabs -->
+            <div class="filter-tabs" id="filter-tabs">
+              <button class="filter-tab active" data-cat="all">All</button>
+              <button class="filter-tab" data-cat="Notice">Notice</button>
+              <button class="filter-tab" data-cat="Event">Event</button>
+              <button class="filter-tab" data-cat="Membership">Membership</button>
+              <button class="filter-tab" data-cat="Workshop">Workshop</button>
+              <button class="filter-tab" data-cat="Competition">Competition</button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Pinned</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="announcements-tbody">
+                <tr><td colspan="6" class="empty-state">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">Add Announcement</div>
+        <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="ann-form" novalidate>
+          <input type="hidden" id="form-id" />
+          <div class="form-group">
+            <label class="form-label" for="form-title">Title <span style="color:var(--color-danger)">*</span></label>
+            <input class="form-input" type="text" id="form-title" placeholder="Announcement title" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-content">Content <span style="color:var(--color-danger)">*</span></label>
+            <textarea class="form-textarea" id="form-content" placeholder="Announcement content…" rows="5" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-category">Category</label>
+            <select class="form-select" id="form-category">
+              <option value="Notice">Notice</option>
+              <option value="Event">Event</option>
+              <option value="Membership">Membership</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Competition">Competition</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-redirect">Redirect URL <span style="font-weight:normal;color:var(--color-text-muted);font-size:var(--text-xs);">(optional)</span></label>
+            <input class="form-input" type="url" id="form-redirect" placeholder="https://example.com/details" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Brochure Image <span style="font-weight:normal;color:var(--color-text-muted);font-size:var(--text-xs);">(optional, max 5MB)</span></label>
+            <div class="admin-upload-zone" id="brochure-zone" style="margin-top:var(--space-2)">
+              <input type="file" accept="image/*" id="brochure-input" />
+              <div class="admin-upload-icon">🖼️</div>
+              <div class="admin-upload-text">Click or drag image to upload</div>
+              <div class="admin-upload-hint">JPG, PNG, WEBP</div>
+            </div>
+            <div id="brochure-preview" style="margin-top:var(--space-3);"></div>
+            <input type="hidden" id="existing-brochure-url" />
+          </div>
+          <div class="form-group">
+            <label class="toggle-wrap">
+              <input type="checkbox" id="form-pinned" />
+              <span class="form-label" style="margin:0">📌 Pin this announcement</span>
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--outline btn--sm" id="modal-cancel">Cancel</button>
+        <button class="btn btn--primary btn--sm" id="modal-save">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Dialog -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-card">
+      <div class="confirm-icon">🗑️</div>
+      <div class="confirm-title">Delete Announcement?</div>
+      <div class="confirm-msg">This action cannot be undone. The announcement will be permanently removed.</div>
+      <div class="confirm-actions">
+        <button class="btn btn--outline btn--sm" id="confirm-cancel">Cancel</button>
+        <button class="btn btn--sm" style="background:var(--color-danger);color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:var(--radius-lg);cursor:pointer;font-weight:var(--font-semibold);" id="confirm-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { requireAuth, logout, populateAdminUser } from '../assets/js/auth.js';
+    import { showToast } from '../assets/js/animations.js';
+    import supabase from '../assets/js/supabase-client.js';
+
+    // ── Auth ──
+    const session = await requireAuth();
+    if (!session) throw new Error('Not authenticated');
+    await populateAdminUser();
+
+    // ── Sidebar toggle ──
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+      document.getElementById('admin-sidebar')?.classList.toggle('open');
+    });
+
+    // ── Logout ──
+    document.getElementById('logout-btn')?.addEventListener('click', logout);
+
+    // ── State ──
+    const PAGE_SIZE = 10;
+    let allData     = [];
+    let filtered    = [];
+    let currentPage = 1;
+    let activeCat   = 'all';
+    let searchQuery = '';
+    let deleteTarget = null;
+
+    // ── Fetch All ──
+    async function fetchAnnouncements() {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        showToast('Failed to load announcements.', 'error');
+        return;
+      }
+
+      allData = data || [];
+      applyFilters();
+    }
+
+    // ── Filter & Render ──
+    function applyFilters() {
+      filtered = allData.filter(row => {
+        const matchCat = activeCat === 'all' || row.category === activeCat;
+        const q = searchQuery.toLowerCase();
+        const matchSearch = !q || row.title?.toLowerCase().includes(q) || row.content?.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('announcements-tbody');
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const slice = filtered.slice(start, start + PAGE_SIZE);
+
+      if (!slice.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No announcements found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = slice.map((row, idx) => `
+        <tr data-id="${row.id}">
+          <td style="color:var(--color-text-muted)">${start + idx + 1}</td>
+          <td>
+            <strong>${escHtml(row.title)}</strong>
+            <div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${escHtml(row.content?.slice(0, 80) || '')}
+            </div>
+          </td>
+          <td><span class="cat-badge cat-badge--${(row.category || '').toLowerCase()}">${escHtml(row.category || 'Notice')}</span></td>
+          <td><span class="pin-icon">${row.is_pinned ? '📌' : '—'}</span></td>
+          <td style="white-space:nowrap">${formatDate(row.created_at)}</td>
+          <td>
+            <div class="admin-table__actions">
+              <button class="btn-edit" onclick="openEdit('${row.id}')">✏️ Edit</button>
+              <button class="btn-delete" onclick="confirmDelete('${row.id}')">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination() {
+      const total = Math.ceil(filtered.length / PAGE_SIZE);
+      const pg = document.getElementById('pagination');
+      if (total <= 1) { pg.innerHTML = ''; return; }
+
+      let html = `
+        <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">‹</button>
+      `;
+      for (let i = 1; i <= total; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      html += `<button class="page-btn" ${currentPage === total ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">›</button>`;
+      html += `<span class="page-info">Page ${currentPage} of ${total} (${filtered.length} total)</span>`;
+      pg.innerHTML = html;
+    }
+
+    window.goPage = (n) => { currentPage = n; renderTable(); renderPagination(); };
+
+    // ── Search & Filter tabs ──
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      applyFilters();
+    });
+
+    document.getElementById('filter-tabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.filter-tab');
+      if (!tab) return;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeCat = tab.dataset.cat;
+      applyFilters();
+    });
+
+    // ── Modal ──
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalTitle   = document.getElementById('modal-title');
+    const formId       = document.getElementById('form-id');
+    const formTitle    = document.getElementById('form-title');
+    const formContent  = document.getElementById('form-content');
+    const formCategory = document.getElementById('form-category');
+    const formPinned   = document.getElementById('form-pinned');
+    const formRedirect = document.getElementById('form-redirect');
+    const brochureZone = document.getElementById('brochure-zone');
+    const brochurePreview = document.getElementById('brochure-preview');
+    const brochureInput = document.getElementById('brochure-input');
+    const existingBrochureUrl = document.getElementById('existing-brochure-url');
+
+    let selectedBrochureFile = null;
+
+    // Image Upload Logic
+    brochureInput.addEventListener('change', () => { if (brochureInput.files[0]) handleBrochureFile(brochureInput.files[0]); });
+    brochureZone.addEventListener('dragover', e => { e.preventDefault(); brochureZone.classList.add('drag-over'); });
+    brochureZone.addEventListener('dragleave', () => brochureZone.classList.remove('drag-over'));
+    brochureZone.addEventListener('drop', e => { e.preventDefault(); brochureZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleBrochureFile(e.dataTransfer.files[0]); });
+
+    function handleBrochureFile(file) {
+      if (!file.type.match(/image\/(jpeg|jpg|png|webp)/i)) { showToast('Only JPG, PNG, WEBP allowed.', 'error'); return; }
+      if (file.size > 5 * 1024 * 1024) { showToast('Must be under 5MB.', 'error'); return; }
+      selectedBrochureFile = file;
+      const src = URL.createObjectURL(file);
+      showBrochurePreview(src);
+    }
+
+    function showBrochurePreview(src) {
+      brochureZone.style.display = 'none';
+      brochurePreview.innerHTML = `
+        <div class="img-preview-card" style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--color-border);">
+          <img src="${src}" alt="Preview" style="width:100%;height:auto;max-height:160px;object-fit:cover;display:block;" />
+          <div class="img-preview-card__overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;gap:var(--space-3);opacity:0;transition:opacity 0.2s;">
+            <button type="button" class="btn btn--sm btn--secondary" id="brochure-remove">Remove</button>
+          </div>
+        </div>`;
+      
+      const card = brochurePreview.querySelector('.img-preview-card');
+      const overlay = brochurePreview.querySelector('.img-preview-card__overlay');
+      card.addEventListener('mouseenter', () => overlay.style.opacity = '1');
+      card.addEventListener('mouseleave', () => overlay.style.opacity = '0');
+
+      document.getElementById('brochure-remove').addEventListener('click', () => { resetBrochureUpload(); existingBrochureUrl.value = ''; });
+    }
+
+    function resetBrochureUpload() {
+      selectedBrochureFile = null;
+      brochurePreview.innerHTML = '';
+      brochureZone.style.display = '';
+      brochureInput.value = '';
+    }
+
+    // Compression helper
+    async function compressImage(file, maxWidth = 1200, quality = 0.85) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const canvas = document.createElement('canvas');
+          let { width, height } = img;
+          if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('fail')), 'image/jpeg', quality);
+        };
+        img.onerror = reject; img.src = url;
+      });
+    }
+
+    async function uploadBrochureImg() {
+      if (!selectedBrochureFile) return existingBrochureUrl.value || null;
+      try {
+        const compressed = await compressImage(selectedBrochureFile);
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const path = `announcement-brochures/${fileName}`;
+        const { error } = await supabase.storage.from('announcement-brochures').upload(path, new File([compressed], fileName, { type: 'image/jpeg' }), { upsert: true });
+        if (error) throw error;
+        const { data } = supabase.storage.from('announcement-brochures').getPublicUrl(path);
+        return data.publicUrl;
+      } catch (err) {
+        console.error('Upload failed:', err);
+        showToast('Image upload failed.', 'error');
+        return null;
+      }
+    }
+
+    function openModal(isEdit = false) {
+      modalTitle.textContent = isEdit ? 'Edit Announcement' : 'Add Announcement';
+      modalOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+      resetForm();
+    }
+
+    function resetForm() {
+      document.getElementById('ann-form').reset();
+      formId.value = '';
+      resetBrochureUpload();
+      existingBrochureUrl.value = '';
+    }
+
+    document.getElementById('add-btn').addEventListener('click', () => { resetForm(); openModal(false); });
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    window.openEdit = (id) => {
+      const row = allData.find(r => String(r.id) === String(id));
+      if (!row) return;
+      formId.value        = row.id;
+      formTitle.value     = row.title     || '';
+      formContent.value   = row.content   || '';
+      formCategory.value  = row.category  || 'Notice';
+      formPinned.checked  = !!row.is_pinned;
+      formRedirect.value  = row.redirect_url || '';
+      
+      resetBrochureUpload();
+      if (row.brochure_image) {
+        existingBrochureUrl.value = row.brochure_image;
+        showBrochurePreview(row.brochure_image);
+      } else {
+        existingBrochureUrl.value = '';
+      }
+
+      openModal(true);
+    };
+
+    document.getElementById('modal-save').addEventListener('click', async () => {
+      const title   = formTitle.value.trim();
+      const content = formContent.value.trim();
+      const redirect_url = formRedirect.value.trim() || null;
+
+      if (!title || !content) {
+        showToast('Title and content are required.', 'error');
+        return;
+      }
+
+      const saveBtn = document.getElementById('modal-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const brochure_image = await uploadBrochureImg();
+
+      const payload = {
+        title,
+        content,
+        category:  formCategory.value,
+        is_pinned: formPinned.checked,
+        redirect_url,
+      };
+      
+      if (brochure_image !== undefined) payload.brochure_image = brochure_image;
+
+      const id = formId.value;
+      let error;
+
+      if (id) {
+        ({ error } = await supabase.from('announcements').update(payload).eq('id', id));
+      } else {
+        ({ error } = await supabase.from('announcements').insert(payload));
+      }
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Save';
+
+      if (error) {
+        showToast(`Error: ${error.message}`, 'error');
+        return;
+      }
+
+      showToast(id ? 'Announcement updated!' : 'Announcement added!', 'success');
+      closeModal();
+      await fetchAnnouncements();
+    });
+
+    // ── Delete ──
+    const confirmOverlay = document.getElementById('confirm-overlay');
+
+    window.confirmDelete = (id) => {
+      deleteTarget = id;
+      confirmOverlay.classList.add('open');
+    };
+
+    document.getElementById('confirm-cancel').addEventListener('click', () => {
+      confirmOverlay.classList.remove('open');
+      deleteTarget = null;
+    });
+
+    document.getElementById('confirm-delete').addEventListener('click', async () => {
+      if (!deleteTarget) return;
+      const { error } = await supabase.from('announcements').delete().eq('id', deleteTarget);
+      confirmOverlay.classList.remove('open');
+      if (error) {
+        showToast(`Delete failed: ${error.message}`, 'error');
+      } else {
+        showToast('Announcement deleted.', 'success');
+        await fetchAnnouncements();
+      }
+      deleteTarget = null;
+    });
+
+    // ── Helpers ──
+    function escHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str ?? '');
+      return d.innerHTML;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    // ── Init ──
+    await fetchAnnouncements();
+  </script>
+</body>
+</html>

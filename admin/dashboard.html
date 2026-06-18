@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – IETE Admin KEC</title>
+  <link rel="stylesheet" href="../assets/css/variables.css" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .quick-action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-5) var(--space-4);
+      background: var(--color-bg-alt);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      text-decoration: none;
+      color: var(--color-text);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      font-family: var(--font-heading);
+      transition: all var(--transition-base);
+      cursor: pointer;
+    }
+
+    .quick-action-btn:hover {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-primary);
+    }
+
+    .quick-action-btn .icon { font-size: 1.5rem; }
+
+    .stat-loading { color: var(--color-text-muted); font-size: var(--text-xl); }
+
+    .msg-snippet {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.65rem;
+      font-weight: var(--font-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge--unread { background: var(--color-danger-light); color: var(--color-danger); }
+    .badge--read   { background: var(--color-success-light); color: var(--color-success); }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-8);
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-sidebar__brand">
+        <img src="../assets/images/iete-logo.png" class="admin-sidebar__brand-logo" alt="IETE" onerror="this.style.display='none'" />
+        <div class="admin-sidebar__brand-text">
+          <div class="admin-sidebar__brand-title">IETE Admin</div>
+          <div class="admin-sidebar__brand-subtitle">KEC Dashboard</div>
+        </div>
+      </div>
+      <nav class="admin-sidebar__nav">
+        <div class="admin-sidebar__section-label">Main</div>
+        <a href="dashboard.html"      class="admin-nav-link active"><span class="admin-nav-link__icon">📊</span>Dashboard</a>
+        <a href="announcements.html"  class="admin-nav-link"><span class="admin-nav-link__icon">📢</span>Announcements</a>
+        <a href="events.html"         class="admin-nav-link"><span class="admin-nav-link__icon">📅</span>Events</a>
+        <a href="gallery.html"        class="admin-nav-link"><span class="admin-nav-link__icon">🖼️</span>Gallery</a>
+        <div class="admin-sidebar__section-label">Team</div>
+        <a href="team.html"           class="admin-nav-link"><span class="admin-nav-link__icon">👥</span>Team Members</a>
+        <a href="faculty.html"        class="admin-nav-link"><span class="admin-nav-link__icon">👨‍🏫</span>Faculty</a>
+        <a href="achievements.html"   class="admin-nav-link"><span class="admin-nav-link__icon">🏆</span>Achievements</a>
+        <div class="admin-sidebar__section-label">Other</div>
+        <a href="messages.html"       class="admin-nav-link"><span class="admin-nav-link__icon">✉️</span>Messages</a>
+        <a href="settings.html"       class="admin-nav-link"><span class="admin-nav-link__icon">⚙️</span>Settings</a>
+      </nav>
+      <div class="admin-sidebar__footer">
+        <div class="admin-user-card">
+          <div class="admin-user-avatar" id="admin-user-avatar">A</div>
+          <div>
+            <div class="admin-user-name" id="admin-user-name">Admin</div>
+            <div class="admin-user-role" id="admin-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="admin-logout-btn" id="logout-btn">🚪 Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <!-- Topbar -->
+      <div class="admin-topbar">
+        <div class="admin-topbar__left">
+          <button class="admin-sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+          <div class="admin-page-title">Dashboard</div>
+        </div>
+        <div class="admin-topbar__right">
+          <a href="../index.html" class="btn btn--outline btn--sm" target="_blank">🌐 View Site</a>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="admin-content">
+
+        <!-- Stats Grid -->
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-icon--blue">📢</div>
+            <div>
+              <div class="admin-stat-number" id="stat-announcements"><span class="stat-loading">…</span></div>
+              <div class="admin-stat-label">Announcements</div>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-icon--gold">📅</div>
+            <div>
+              <div class="admin-stat-number" id="stat-events"><span class="stat-loading">…</span></div>
+              <div class="admin-stat-label">Upcoming Events</div>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-icon--green">👥</div>
+            <div>
+              <div class="admin-stat-number" id="stat-team"><span class="stat-loading">…</span></div>
+              <div class="admin-stat-label">Team Members</div>
+            </div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon admin-stat-icon--red">✉️</div>
+            <div>
+              <div class="admin-stat-number" id="stat-messages"><span class="stat-loading">…</span></div>
+              <div class="admin-stat-label">Unread Messages</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two-column grid -->
+        <div class="admin-grid-2">
+
+          <!-- Recent Announcements -->
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <div class="admin-panel__title">📢 Recent Announcements</div>
+              <a href="announcements.html" class="btn btn--outline btn--sm">View All</a>
+            </div>
+            <div class="admin-panel__body" id="recent-announcements">
+              <div class="empty-state">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Recent Messages -->
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <div class="admin-panel__title">✉️ Recent Messages</div>
+              <a href="messages.html" class="btn btn--outline btn--sm">View All</a>
+            </div>
+            <div class="admin-panel__body" id="recent-messages">
+              <div class="empty-state">Loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="admin-panel">
+          <div class="admin-panel__header">
+            <div class="admin-panel__title">⚡ Quick Actions</div>
+          </div>
+          <div class="admin-panel__body">
+            <div class="quick-actions-grid">
+              <a href="announcements.html" class="quick-action-btn">
+                <span class="icon">📢</span>Announcements
+              </a>
+              <a href="events.html" class="quick-action-btn">
+                <span class="icon">📅</span>Events
+              </a>
+              <a href="gallery.html" class="quick-action-btn">
+                <span class="icon">🖼️</span>Gallery
+              </a>
+              <a href="team.html" class="quick-action-btn">
+                <span class="icon">👥</span>Team
+              </a>
+              <a href="faculty.html" class="quick-action-btn">
+                <span class="icon">👨‍🏫</span>Faculty
+              </a>
+              <a href="achievements.html" class="quick-action-btn">
+                <span class="icon">🏆</span>Achievements
+              </a>
+              <a href="messages.html" class="quick-action-btn">
+                <span class="icon">✉️</span>Messages
+              </a>
+              <a href="settings.html" class="quick-action-btn">
+                <span class="icon">⚙️</span>Settings
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.admin-content -->
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { requireAuth, logout, populateAdminUser } from '../assets/js/auth.js';
+    import { showToast } from '../assets/js/animations.js';
+    import supabase from '../assets/js/supabase-client.js';
+
+    // ── Auth Guard ──
+    const session = await requireAuth();
+    if (!session) throw new Error('Not authenticated');
+    await populateAdminUser();
+
+    // ── Sidebar toggle ──
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+      document.getElementById('admin-sidebar')?.classList.toggle('open');
+    });
+
+    // ── Logout ──
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      await logout();
+    });
+
+    // ── Fetch Stats ──
+    async function fetchStats() {
+      // Announcements count
+      const { count: annCount } = await supabase
+        .from('announcements')
+        .select('id', { count: 'exact', head: true });
+      document.getElementById('stat-announcements').textContent = annCount ?? 0;
+
+      // Upcoming events count
+      const today = new Date().toISOString().split('T')[0];
+      const { count: evCount } = await supabase
+        .from('upcoming_events')
+        .select('id', { count: 'exact', head: true })
+        .gte('event_date', today);
+      document.getElementById('stat-events').textContent = evCount ?? 0;
+
+      // Team members count
+      const { count: teamCount } = await supabase
+        .from('team_members')
+        .select('id', { count: 'exact', head: true });
+      document.getElementById('stat-team').textContent = teamCount ?? 0;
+
+      // Unread messages
+      const { count: msgCount } = await supabase
+        .from('contact_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_read', false);
+      document.getElementById('stat-messages').textContent = msgCount ?? 0;
+    }
+
+    // ── Recent Announcements ──
+    async function fetchRecentAnnouncements() {
+      const container = document.getElementById('recent-announcements');
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('id, title, category, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error || !data?.length) {
+        container.innerHTML = '<div class="empty-state">No announcements yet.</div>';
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <div class="activity-item">
+          <div class="activity-dot"></div>
+          <div class="activity-text">
+            <strong>${escHtml(item.title)}</strong>
+            <div class="msg-snippet">${escHtml(item.category || 'General')}</div>
+          </div>
+          <div class="activity-time">${formatDate(item.created_at)}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── Recent Messages ──
+    async function fetchRecentMessages() {
+      const container = document.getElementById('recent-messages');
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .select('id, name, email, subject, is_read, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error || !data?.length) {
+        container.innerHTML = '<div class="empty-state">No messages yet.</div>';
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <div class="activity-item">
+          <div class="activity-dot" style="${item.is_read ? 'background:var(--color-border)' : ''}"></div>
+          <div class="activity-text">
+            <strong>${escHtml(item.name || 'Unknown')}</strong>
+            <div class="msg-snippet">${escHtml(item.subject || item.email || '')}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="activity-time">${formatDate(item.created_at)}</div>
+            <span class="badge ${item.is_read ? 'badge--read' : 'badge--unread'}">${item.is_read ? 'Read' : 'Unread'}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Helpers ──
+    function escHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    }
+
+    // ── Init ──
+    await Promise.all([fetchStats(), fetchRecentAnnouncements(), fetchRecentMessages()]);
+  </script>
+</body>
+</html>
