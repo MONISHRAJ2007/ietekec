@@ -379,7 +379,7 @@
           const card = document.createElement('div');
           card.className = `faculty-card reveal reveal-delay-${delay}`;
           card.innerHTML = `
-            ${avatarHtml(f.photo_url, f.name, 'faculty-card__avatar', 'faculty-card__avatar-placeholder')}
+            ${avatarHtml(f.image_url, f.name, 'faculty-card__avatar', 'faculty-card__avatar-placeholder')}
             <div class="faculty-card__info">
               <div class="faculty-card__name">${f.name || 'Faculty Coordinator'}</div>
               <div class="faculty-card__role">${f.designation || 'Faculty Coordinator'}</div>
@@ -484,7 +484,7 @@
             const cardEl = document.createElement('div');
             cardEl.className = `team-card reveal reveal-delay-${delay}`;
             cardEl.innerHTML = `
-              ${avatarHtml(m.photo_url, m.name, 'team-card__avatar', 'team-card__avatar-placeholder')}
+              ${avatarHtml(m.image_url, m.name, 'team-card__avatar', 'team-card__avatar-placeholder')}
               <div class="team-card__badge">${roleLabel}</div>
               <div class="team-card__name">${m.name || 'Team Member'}</div>
               ${m.department ? `<div style="font-size:var(--text-sm);color:var(--color-text-muted);margin-top:var(--space-1)">${m.department}</div>` : ''}
